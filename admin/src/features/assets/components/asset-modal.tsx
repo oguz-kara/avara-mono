@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
   Modal,
   Box,
@@ -24,7 +24,6 @@ import { useMutation } from '@avc/hooks/use-mutation'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CloseIcon from '@mui/icons-material/Close'
 import { supportedTypes } from '../config/supported-types'
-import ArticleTwoToneIcon from '@mui/icons-material/ArticleTwoTone'
 import StarIcon from '@mui/icons-material/Star'
 import StarBorderIcon from '@mui/icons-material/StarBorder'
 import { Asset } from '../types'
@@ -75,25 +74,32 @@ function AssetModal({
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const files = event.target.files
-    if (files && files.length > 0) {
-      const formData = new FormData()
-      Array.from(files).forEach((file) => {
-        formData.append('files', file)
-      })
+    try {
+      const files = event.target.files
+      console.log({ files })
+      if (files && files.length > 0) {
+        const formData = new FormData()
+        Array.from(files).forEach((file) => {
+          formData.append('files', file)
+        })
+        console.log({ formData })
 
-      const uploadedAssets = await mutateAssets({
-        path: '/assets/upload/multiple',
-        options: { parseBody: false },
-        body: formData,
-      })
+        const uploadedAssets = await mutateAssets({
+          path: '/assets/upload/multiple',
+          options: { parseBody: false },
+          body: formData,
+        })
+        console.log({ uploadedAssets })
 
-      if (uploadedAssets && Array.isArray(uploadedAssets)) {
-        const newSelectedAssets = [...uploadedAssets, ...selectedAssets]
-        setSelectedAssets(newSelectedAssets)
-        onChange?.(newSelectedAssets)
-        refetch()
+        if (uploadedAssets && Array.isArray(uploadedAssets)) {
+          const newSelectedAssets = [...uploadedAssets, ...selectedAssets]
+          setSelectedAssets(newSelectedAssets)
+          onChange?.(newSelectedAssets)
+          refetch()
+        }
       }
+    } catch (err: any) {
+      console.log({ err })
     }
   }
 
@@ -153,6 +159,10 @@ function AssetModal({
   const getFeaturedAssetId = () => {
     return selectedAssets.find((a) => a.featured)?.id
   }
+
+  useEffect(() => {
+    console.log({ assetsStore })
+  }, [assetsStore])
 
   return (
     <Modal open={open} onClose={onClose}>

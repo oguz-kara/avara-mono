@@ -13,7 +13,6 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import AssetModal from './asset-modal'
 import Image from 'next/image'
 import { Asset } from '../types'
-import FileIcon from '@mui/icons-material/FilePresent'
 
 export default function AssetPickerDialog({
   selectedAssets,
@@ -77,7 +76,6 @@ export default function AssetPickerDialog({
                     height: '164px',
                   }}
                 />
-                )
                 <ImageListItemBar
                   title={asset.originalName}
                   subtitle={asset.fileSize}

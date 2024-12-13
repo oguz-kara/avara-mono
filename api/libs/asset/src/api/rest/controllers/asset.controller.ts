@@ -51,6 +51,7 @@ export class AssetController {
     @UploadedFiles() files: Express.Multer.File[],
     @Ctx() ctx: RequestContext,
   ) {
+    console.log({ files })
     return await this.assetService.uploadMultiple(ctx, files)
   }
 

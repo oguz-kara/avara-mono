@@ -57,6 +57,8 @@ export class AssetService {
       throw new NoFileUploadedError()
     }
 
+    console.log({ file })
+
     const maxFileSize = this.configService.get<number>(
       'asset.storage.maxFileSize',
     )
@@ -70,6 +72,8 @@ export class AssetService {
       fileType,
     )
 
+    console.log({ fileType })
+
     let fileMetadata: FileMetadata
     if (fileType === 'IMAGE') {
       fileMetadata = await this.imageProcessor.getBufferMetadata(file.buffer)
@@ -80,6 +84,8 @@ export class AssetService {
       )
     }
 
+    console.log({ fileMetadata })
+
     const context = FileProcessingContext.create(file.buffer, file.originalname)
     context.normalizedFilename = normalizedFilename
     context.metadata = {
@@ -87,6 +93,8 @@ export class AssetService {
       type: fileType as AssetType,
       source: 'not-added-yet',
     }
+
+    console.log({ context })
 
     const asset = context.getAsset(ctx)
     const storageService = this.storageFactory.create()
@@ -119,6 +127,8 @@ export class AssetService {
     if (!files || files.length === 0) {
       throw new NoFileUploadedError()
     }
+
+    console.log({ files })
 
     return this.prisma.$transaction(async (tx) => {
       const uploadPromises = files.map((file) =>
