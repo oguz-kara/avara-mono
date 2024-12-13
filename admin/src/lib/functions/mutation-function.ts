@@ -22,6 +22,7 @@ export const mutationFunction = async ({
   console.log({ url })
 
   const res = await fetch(url, {
+    credentials: 'include',
     method,
     ...(body && {
       body: options?.parseBody ? JSON.stringify(body) : body,

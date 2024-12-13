@@ -9,6 +9,7 @@ export const getFetcherFunction = <T = any>(path: string) => {
     const channelToken = cookies.get('channel_token')
 
     const res = await fetch(url, {
+      credentials: 'include',
       method: 'GET',
       headers: {
         ...(channelToken && { 'x-channel-token': channelToken }),
