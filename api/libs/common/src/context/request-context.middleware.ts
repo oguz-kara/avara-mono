@@ -9,6 +9,7 @@ export class RequestContextMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     try {
       const requestContext = await this.contextService.createContext(
+        {} as any,
         req.headers,
       )
       this.contextService.setContext(requestContext)
