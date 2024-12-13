@@ -31,7 +31,6 @@ export class ProductResolver {
     @Ctx() ctx: RequestContext,
     @Args('pagination', { nullable: true }) pagination?: PaginationInput,
   ): Promise<PaginatedItemsResponse<Product>> {
-    console.log({ pagination })
     return this.productService.getMany(ctx, relations, pagination)
   }
 

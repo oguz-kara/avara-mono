@@ -76,32 +76,23 @@ export class ChannelService {
     ctx: RequestContext,
     token: string,
   ): Promise<Channel> {
-    const channel = await this.prisma.channel.findFirst({
-      where: { token },
+    const channel = await this.prisma.channel.findFirst({ where: { token } })
+    if (channel) return channel
+
+    const defaultChannel = await this.prisma.channel.findFirst({
+      where: { isDefault: true },
     })
+    if (defaultChannel) return defaultChannel
 
-    if (!channel) {
-      const defaultChannel = await this.prisma.channel.findFirst({
-        where: { isDefault: true },
-      })
-      const token = generateChannelToken()
-
-      if (!defaultChannel) {
-        return await this.createChannel(ctx, {
-          code: 'default',
-          name: 'Default Channel',
-          isDefault: true,
-          type: ChannelType.RETAIL,
-          currencyCode: 'USD',
-          defaultLanguageCode: 'en',
-          token,
-          createdBy: ctx.user?.id,
-        })
-      }
-
-      return defaultChannel
-    }
-
-    return channel
+    return this.createChannel(ctx, {
+      code: 'default',
+      name: 'Default Channel',
+      isDefault: true,
+      type: ChannelType.RETAIL,
+      currencyCode: 'USD',
+      defaultLanguageCode: 'en',
+      token: generateChannelToken(),
+      createdBy: ctx.user?.id,
+    })
   }
 }

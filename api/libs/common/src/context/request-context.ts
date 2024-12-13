@@ -10,9 +10,9 @@ export interface ClientInfo {
 }
 
 export interface RequestContextProps {
-  channel: ChannelData
-  languageCode: string
-  currencyCode: string
+  channel?: ChannelData
+  languageCode?: string
+  currencyCode?: string
   requestId: string
   clientInfo: ClientInfo
   timestamp: Date
@@ -25,7 +25,7 @@ export interface RequestContextProps {
 export class RequestContext {
   private static asyncLocalStorage = new AsyncLocalStorage<RequestContext>()
 
-  private readonly _channel: ChannelData
+  private _channel: ChannelData
   private readonly _languageCode: string
   private readonly _currencyCode: string
   private readonly _requestId: string
@@ -113,6 +113,10 @@ export class RequestContext {
 
   get user(): User | undefined {
     return this._user
+  }
+
+  set channel(channel: ChannelData) {
+    this._channel = channel
   }
 
   hasUser(): boolean {

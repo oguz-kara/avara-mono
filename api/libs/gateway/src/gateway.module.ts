@@ -8,7 +8,7 @@ import { AssetModule } from '@av/asset'
 import { UserModule } from '@av/user'
 import { SeoModule } from '@av/seo'
 import { CommonModule } from '@av/common/common.module'
-import { PermissionsGuard } from '@av/common/guards/permission.guard'
+import { AppGuard } from '@av/common/guards/app.guard'
 import { APP_GUARD } from '@nestjs/core'
 import { JwtModule } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
@@ -63,7 +63,7 @@ import { ConfigModule } from '@nestjs/config'
   providers: [
     {
       provide: APP_GUARD,
-      useClass: PermissionsGuard,
+      useClass: AppGuard,
     },
   ],
 })

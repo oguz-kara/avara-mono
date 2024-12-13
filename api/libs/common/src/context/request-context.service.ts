@@ -21,24 +21,11 @@ export class RequestContextService {
   }
 
   async createContext(
+    channel: ChannelData,
     headers: Record<string, string | string[]>,
   ): Promise<RequestContext> {
     try {
-      const token = this.extractHeader(headers, 'x-channel-token')
-      const code = this.extractHeader(headers, 'x-channel-code') || null
-      const defaultLanguageCode =
-        this.extractHeader(headers, 'x-channel-lang') || 'en-US'
-      const currencyCode =
-        this.extractHeader(headers, 'x-channel-currency') || 'USD'
-
-      if (!token) throw new ChannelTokenNotFoundError()
-
-      const channelData: ChannelData = {
-        token,
-        code,
-        defaultLanguageCode,
-        currencyCode,
-      }
+      if (!channel) throw new ChannelTokenNotFoundError()
 
       const requestId =
         this.extractHeader(headers, 'x-request-id') || crypto.randomUUID()
@@ -46,9 +33,9 @@ export class RequestContextService {
       const clientInfo = this.extractClientInfo(headers)
 
       return new RequestContext({
-        channel: channelData,
-        languageCode: channelData.defaultLanguageCode,
-        currencyCode: channelData.currencyCode,
+        channel,
+        languageCode: channel.defaultLanguageCode,
+        currencyCode: channel.currencyCode,
         requestId,
         clientInfo,
         timestamp: new Date(),

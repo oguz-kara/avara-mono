@@ -12,9 +12,11 @@ import { AuthService } from '@av/user/application/services/auth.service'
 import { AuthStorageService } from '@av/user/application/services/auth-storage.service'
 import { Permission } from '../access-control'
 import { RequestContextService } from '../context'
+import { ChannelService } from '@av/channel'
+import { ChannelData } from '../context/channel-context.interface'
 
 @Injectable()
-export class PermissionsGuard implements CanActivate {
+export class AppGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
@@ -22,6 +24,7 @@ export class PermissionsGuard implements CanActivate {
     private readonly configService: ConfigService,
     private readonly authStorageService: AuthStorageService,
     private readonly contextService: RequestContextService,
+    private readonly channelService: ChannelService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -31,6 +34,8 @@ export class PermissionsGuard implements CanActivate {
     const isAuthActive = this.configService.get(
       'authentication.authorizationEnabled',
     )
+
+    await this.setChannelToRequest(context)
 
     if (!isAuthActive) return true
 
@@ -70,7 +75,10 @@ export class PermissionsGuard implements CanActivate {
     const gqlContext = GqlExecutionContext.create(context).getContext()
     gqlContext.user = payload
     const { req: gqlReq } = gqlContext
-    const ctx = await this.contextService.createContext(gqlReq.headers)
+    const ctx = await this.contextService.createContext(
+      gqlReq.channel,
+      gqlReq.headers,
+    )
 
     const isAuthorized = this.authService.isAuthorizedToPerformAction(
       ctx,
@@ -143,5 +151,26 @@ export class PermissionsGuard implements CanActivate {
     } else {
       throw new UnauthorizedException('JWT token verification failed')
     }
+  }
+
+  private async setChannelToRequest(context: ExecutionContext) {
+    const ctx = GqlExecutionContext.create(context)
+    const request = ctx.getContext().req
+
+    const channelToken = request.headers['x-channel-token']
+
+    const channel = await this.channelService.getOrCreateDefaultChannel(
+      {} as any,
+      channelToken,
+    )
+
+    const channelData: ChannelData = {
+      token: channel.token,
+      code: channel.code,
+      defaultLanguageCode: channel.defaultLanguageCode,
+      currencyCode: channel.currencyCode,
+    }
+
+    request.channel = channelData
   }
 }
