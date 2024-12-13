@@ -29,5 +29,7 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|static|favicon.ico|kimlik-dogrulama).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|images|favicon.ico|kimlik-dogrulama).*)',
+  ],
 }
