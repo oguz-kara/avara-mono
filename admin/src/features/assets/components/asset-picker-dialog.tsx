@@ -69,7 +69,6 @@ export default function AssetPickerDialog({
                       : '/images/document-placeholder.png'
                   }
                   alt={asset.originalName}
-                  loading="lazy"
                   style={{
                     objectFit: 'contain',
                     width: '164px',
