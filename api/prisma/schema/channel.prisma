@@ -1,0 +1,35 @@
+enum ChannelType {
+    RETAIL
+    B2B
+    MARKETPLACE
+    LOCALE
+    OTHER
+}
+
+enum ChannelStatus {
+    ACTIVE
+    INACTIVE
+    MAINTENANCE
+}
+
+model Channel {
+    id                  Int           @id @default(autoincrement())
+    name                String
+    code                String        @unique
+    token               String        @unique
+    defaultLanguageCode String
+    currencyCode        String
+    isDefault           Boolean       @default(false)
+    status              ChannelStatus @default(ACTIVE)
+    type                ChannelType   @default(OTHER)
+
+    deletedAt DateTime?
+    deletedBy String?
+    createdBy String
+    updatedBy String?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    @@index([token])
+    @@index([code])
+}

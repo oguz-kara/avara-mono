@@ -1,0 +1,11 @@
+overwrite: true
+schema: 'http://localhost:3000/admin-api' # Replace with your GraphQL API URL or schema file
+generates:
+  src/generated/graphql.ts: # Output file for generated types and hooks
+    plugins:
+      - 'typescript'
+      - 'typescript-operations'
+      - 'typescript-react-apollo'
+    config:
+      withComponent: false # Skip generating legacy components
+      withHOC: false # Skip generating Higher-Order Components

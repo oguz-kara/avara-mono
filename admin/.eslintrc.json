@@ -1,0 +1,52 @@
+{
+  "root": true,
+  "extends": [
+    "next/core-web-vitals", 
+    "next/typescript",
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:jsx-a11y/recommended",
+    "plugin:import/recommended",
+    "plugin:unicorn/recommended",
+  ],
+  "plugins": [
+    "simple-import-sort",
+    "import"
+  ],
+  "rules": {
+    "react/react-in-jsx-scope": "off", 
+    "react/prop-types": "off", 
+    "semi": ["error", "never"], 
+    "quotes": ["error", "single"], 
+    "simple-import-sort/imports": "error", 
+    "simple-import-sort/exports": "error", 
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          ["builtin", "external"],
+          ["internal"],
+          ["parent", "sibling", "index"]
+        ],
+        "newlines-between": "always"
+      }
+    ],
+    "unicorn/prefer-module": "off", 
+    "unicorn/filename-case": [
+      "error",
+      {
+        "cases": {
+          "camelCase": true,
+          "pascalCase": true
+        }
+      }
+    ],
+    "unicorn/no-array-reduce": "off" 
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}

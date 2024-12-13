@@ -1,0 +1,344 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+"""The type of permission action"""
+enum ActionType {
+  ALL
+  DELETE
+  READ
+  UPDATE
+  WRITE
+}
+
+input AssignRoleInput {
+  roleId: String!
+  userId: String!
+}
+
+type AuthenticateUserSuccess {
+  token: String!
+}
+
+type Channel {
+  code: String!
+  createdAt: DateTime!
+  createdBy: String!
+  currencyCode: String!
+  defaultLanguageCode: String!
+  id: Int!
+  isDefault: Boolean!
+  name: String!
+  token: String!
+  type: String!
+  updatedAt: DateTime!
+}
+
+input CreateChannelInput {
+  code: String!
+  currencyCode: String!
+  defaultLanguageCode: String!
+  isDefault: Boolean
+  name: String!
+  type: String!
+}
+
+input CreatePermissionDto {
+  action: ActionType!
+  permissionType: ActionType
+  resource: ResourceType!
+  scope: ScopeType!
+  specificScopeId: String
+}
+
+input CreateProductInput {
+  description: String
+  name: String!
+  slug: String!
+}
+
+input CreateRoleDto {
+  name: String!
+}
+
+type CreateRoleResponse {
+  id: ID!
+  name: String!
+}
+
+input CreateSeoMetadataInput {
+  canonicalUrl: String
+  description: String!
+  hreflang: String
+  keywords: String!
+  ogDescription: String
+  ogImage: String
+  ogTitle: String
+  pageType: String
+  robots: String
+  schemaMarkup: JSON!
+  title: String!
+}
+
+type CreateUserAccountSuccess {
+  createdAt: DateTime!
+  createdBy: String!
+  deletedAt: DateTime
+  deletedBy: String
+  email: String!
+  emailVerified: Boolean!
+  id: ID!
+  isActive: String!
+  roleId: ID!
+  updatedAt: DateTime!
+  updatedBy: String
+}
+
+input CreateUserDto {
+  email: String!
+  emailVerified: Boolean!
+  isActive: UserActiveStatus!
+  password: String!
+  roleId: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+input EmailInput {
+  email: String!
+}
+
+type FindPermissionsResponseType {
+  items: [Permission!]!
+  pagination: PaginatedResponseMeta!
+}
+
+type FindProductsResponse {
+  items: [Product!]!
+  pagination: PaginatedResponseMeta!
+}
+
+type FindRolesResponseType {
+  items: [Role!]!
+  pagination: PaginatedResponseMeta!
+}
+
+type FindSeoMetadataResponse {
+  items: [SeoMetadata!]!
+  pagination: PaginatedResponseMeta!
+}
+
+type FindUsersResponseType {
+  items: [UserType!]!
+  pagination: PaginatedResponseMeta!
+}
+
+input IDInput {
+  id: String!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+input LoginUserDto {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  assignRoleToUser(input: AssignRoleInput!): UserType!
+  authenticateUser(input: LoginUserDto!): AuthenticateUserSuccess!
+  createChannel(input: CreateChannelInput!): Channel!
+  createPermission(input: CreatePermissionDto!): Permission!
+  createProduct(input: CreateProductInput!): Product!
+  createRole(input: CreateRoleDto!): CreateRoleResponse!
+  createSeoMetadata(input: CreateSeoMetadataInput!): SeoMetadata!
+  createUser(input: CreateUserDto!): UserType!
+  createUserAccount(input: RegisterUserDto!): CreateUserAccountSuccess!
+  deleteChannel(id: Int!): Channel!
+  deleteProduct(id: String!): Product!
+  deleteSeoMetadata(id: String!): SeoMetadata!
+  editPermissionDetails(id: String!, input: UpdatePermissionDto!): Permission!
+  recoverPermissionById(input: IDInput!): Permission!
+  removePermissionById(input: IDInput!): Permission!
+  removeRoleById(id: String!): Role!
+  renameRoleById(input: RenameRoleDto!): Role!
+  setRolePermissions(input: SetRolePermissionsDto!): Role!
+  softRemovePermissionById(input: IDInput!): Permission!
+  updateChannel(id: Int!, input: UpdateChannelInput!): Channel!
+  updateProduct(id: String!, input: UpdateProductInput!): Product!
+  updateSeoMetadata(id: String!, input: UpdateSeoMetadataInput!): SeoMetadata!
+}
+
+type PaginatedResponseMeta {
+  skip: Int!
+  take: Int!
+}
+
+input PaginationInput {
+  skip: Float!
+  take: Float!
+}
+
+type Permission {
+  action: String!
+  createdAt: DateTime
+  createdBy: String
+  deletedAt: DateTime
+  id: String!
+  name: String!
+  resource: String!
+  scope: String!
+  specificScopeId: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+type Product {
+  createdAt: DateTime!
+  createdBy: String!
+  description: String
+  id: ID!
+  name: String!
+  slug: String!
+  updatedAt: DateTime!
+  updatedBy: String
+}
+
+type Query {
+  channel(id: Int!): Channel!
+  channels: [Channel!]!
+  findPermissionById(input: IDInput!): Permission
+  findRoleById(id: String!): Role
+  findUserByEmail(input: EmailInput!): UserType
+  findUserById(input: IDInput!): UserType
+  getOrCreateDefaultChannel(token: String!): Channel!
+  permissions(input: PaginationInput): FindPermissionsResponseType!
+  product(id: String!): Product!
+  products(pagination: PaginationInput!): FindProductsResponse!
+  roles(input: PaginationInput): FindRolesResponseType!
+  searchProducts(query: String!, skip: Int, take: Int): PaginatedResponseMeta!
+  seoMetadata(id: String!): SeoMetadata!
+  seoMetadatas(pagination: PaginationInput!): FindSeoMetadataResponse!
+  users(input: PaginationInput): FindUsersResponseType!
+}
+
+input RegisterUserDto {
+  email: String!
+  isActive: UserActiveStatus!
+  password: String!
+  roleId: String!
+}
+
+input RenameRoleDto {
+  id: String!
+  name: String!
+}
+
+"""The type of resource"""
+enum ResourceType {
+  BLOG_POST
+  BLOG_POST_CATEGORY
+  PERMISSION
+  PRODUCT_CATEGORY
+  ROLE
+  USER
+}
+
+type Role {
+  channelToken: String
+  id: ID!
+  name: String!
+}
+
+"""The type of scope"""
+enum ScopeType {
+  GLOBAL
+  SELF
+}
+
+type SeoMetadata {
+  canonicalUrl: String
+  createdAt: DateTime
+  description: String!
+  hreflang: String
+  id: ID!
+  keywords: String!
+  ogDescription: String
+  ogImage: String
+  ogTitle: String
+  pageType: String
+  robots: String
+  schemaMarkup: JSON!
+  title: String!
+  updatedAt: DateTime!
+  version: Float!
+}
+
+input SetRolePermissionsDto {
+  permissionIds: [String!]!
+  roleId: String!
+}
+
+input UpdateChannelInput {
+  code: String
+  currencyCode: String
+  defaultLanguageCode: String
+  isDefault: Boolean
+  name: String
+  type: String
+}
+
+input UpdatePermissionDto {
+  action: ActionType
+  permissionType: ActionType
+  resource: ResourceType
+  scope: ScopeType
+  specificScopeId: String
+}
+
+input UpdateProductInput {
+  description: String
+  name: String
+  price: Float
+  slug: String
+}
+
+input UpdateSeoMetadataInput {
+  canonicalUrl: String
+  description: String
+  hreflang: String
+  keywords: String
+  ogDescription: String
+  ogImage: String
+  ogTitle: String
+  pageType: String
+  robots: String
+  schemaMarkup: JSON!
+  title: String
+}
+
+"""The active status of a user"""
+enum UserActiveStatus {
+  ACTIVE
+  INACTIVE
+}
+
+type UserType {
+  createdAt: DateTime!
+  createdBy: String!
+  deletedAt: DateTime
+  deletedBy: String
+  email: String!
+  emailVerified: Boolean!
+  id: ID!
+  isActive: String!
+  roleId: ID!
+  updatedAt: DateTime!
+  updatedBy: String
+}

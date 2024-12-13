@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  avara-dev-db:
+    image: postgres:latest
+    container_name: avara-dev-db
+    environment:
+      POSTGRES_USER: avara_dev_db
+      POSTGRES_PASSWORD: 4784961Edc!
+      POSTGRES_DB: avara_dev_db
+    ports:
+      - "5445:5432"
+    volumes:
+      - avara-dev-db:/var/lib/postgresql/data
+    networks:
+      - avara-network
+
+  core-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./api/.env.development
+    depends_on:
+      - avara-dev-db
+    ports:
+      - "3002:3000"
+    networks:
+      - avara-network
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./admin/.env.development
+    ports:
+      - "3003:3000"
+    networks:
+      - avara-network
+    depends_on:
+      - core-api
+ 
+volumes:
+  avara-dev-db:
+
+networks:
+  avara-network:
+    driver: bridge
