@@ -2,7 +2,7 @@ import cookies from 'js-cookie'
 
 export const getFetcherFunction = <T = any>(path: string) => {
   return async () => {
-    let url = `${process.env.NEXT_PUBLIC_API_URL}`
+    let url = `${process.env.NEXT_PUBLIC_REMOTE_URL}`
 
     url = (url as string) + path
 

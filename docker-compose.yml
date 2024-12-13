@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - ./api/.env.development
+      - ./api/.env.production
     depends_on:
       - avara-dev-db
     ports:
@@ -35,7 +35,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - ./admin/.env.development
+      - ./admin/.env
     ports:
       - "3003:3000"
     networks:

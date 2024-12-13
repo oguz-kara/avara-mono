@@ -13,7 +13,7 @@ export const mutationFunction = async ({
   options: { parseBody?: boolean }
   headers?: Record<string, string>
 }) => {
-  let url = `${process.env.NEXT_PUBLIC_API_URL}`
+  let url = `${process.env.NEXT_PUBLIC_REMOTE_URL}`
 
   url = (url as string) + path
 

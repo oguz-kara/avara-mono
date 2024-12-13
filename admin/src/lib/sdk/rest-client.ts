@@ -18,7 +18,7 @@ export class RestClient {
   private async initialize() {
     const cookieStore = await cookies()
     this.channelToken = cookieStore.get('channel_token')?.value || ''
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || ''
+    this.baseUrl = `${process.env.NEXT_PUBLIC_REMOTE_URL}/admin-api` || ''
 
     if (!this.baseUrl) {
       throw new Error('Base URL is not defined in the .env file as REMOTE_URL')
