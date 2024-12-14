@@ -76,20 +76,17 @@ function AssetModal({
   ) => {
     try {
       const files = event.target.files
-      console.log({ files })
       if (files && files.length > 0) {
         const formData = new FormData()
         Array.from(files).forEach((file) => {
           formData.append('files', file)
         })
-        console.log({ formData })
 
         const uploadedAssets = await mutateAssets({
           path: '/assets/upload/multiple',
           options: { parseBody: false },
           body: formData,
         })
-        console.log({ uploadedAssets })
 
         if (uploadedAssets && Array.isArray(uploadedAssets)) {
           const newSelectedAssets = [...uploadedAssets, ...selectedAssets]
@@ -159,10 +156,6 @@ function AssetModal({
   const getFeaturedAssetId = () => {
     return selectedAssets.find((a) => a.featured)?.id
   }
-
-  useEffect(() => {
-    console.log({ assetsStore })
-  }, [assetsStore])
 
   return (
     <Modal open={open} onClose={onClose}>

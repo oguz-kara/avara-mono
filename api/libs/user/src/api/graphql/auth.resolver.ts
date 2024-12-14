@@ -34,14 +34,12 @@ export class AuthResolver {
   @Query(() => UserType, { nullable: true })
   async activeUser(@Context() context: any, @Ctx() ctx: RequestContext) {
     const token = context.req.headers['x-access-token'] as string
-    console.log({ token })
     return await this.userAuthService.getUserFromToken(ctx, token)
   }
 
   @Allow(Permission.READ_NAVBAR_ITEMS_GLOBAL)
   @Query(() => [NavbarResponse])
   async getUserAccessUI(@CurrentUser() user: any, @Ctx() ctx: RequestContext) {
-    console.log({ user })
     return await this.userAuthService.getUserAccessUI(ctx, user.userId)
   }
 }

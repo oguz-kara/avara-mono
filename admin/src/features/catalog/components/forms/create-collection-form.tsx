@@ -141,7 +141,6 @@ function CreateCollectionForm() {
     useMutation(CREATE_COLLECTION)
 
   const createCollectionMutation = async (data: any) => {
-    console.log({ data })
     const result = await createCollection({
       variables: { input: data },
     })
@@ -714,7 +713,7 @@ function CreateCollectionForm() {
 
   return (
     <FormProvider {...formMethods}>
-      <form onSubmit={handleSubmit(onSubmit, (data) => console.log(data))}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <FormLayout
           title={header}
           leftContent={<FormTabs tabs={tabs} />}

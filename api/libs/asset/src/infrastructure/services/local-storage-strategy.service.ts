@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as path from 'path'
 
-import { Asset, DbTransactionalClient, PrismaService } from '@av/database'
+import {
+  Asset,
+  DbTransactionalClient,
+  ImageVariant,
+  PrismaService,
+} from '@av/database'
 
 import { AssetStorageStrategy } from '../../domain/services/asset-storage-strategy.interface'
 import { ImageProcessor } from '../../domain/services/image-processor.service'
@@ -31,8 +36,8 @@ export class LocalStorageStrategy implements AssetStorageStrategy {
   ) {
     // this.basePath = path.resolve('/usr/src/app/uploads', 'preview')
     const envPath =
-      process.env.NODE_ENV === 'production'
-        ? [process.env.ASSET_STORAGE_PATH, 'preview']
+      configService.get('NODE_ENV') === 'production'
+        ? [configService.get('ASSET_STORAGE_PATH'), 'preview']
         : [__dirname, '..', 'uploads', 'preview']
     this.basePath = path.resolve(...envPath)
     this.localPath =
@@ -54,7 +59,7 @@ export class LocalStorageStrategy implements AssetStorageStrategy {
   }
 
   private setAssetSource(asset: Asset): void {
-    asset.source = path.join(this.localPath, asset.name)
+    asset.source = path.join(this.basePath, asset.name)
   }
 
   async save(
@@ -151,7 +156,7 @@ export class LocalStorageStrategy implements AssetStorageStrategy {
               height: height,
               mimeType: asset.mimeType,
               fileSize: buffer.length,
-              source: path.join(this.localPath, variationName),
+              source: path.join(this.basePath, variationName),
               preview: variantPreviewUrl,
               storageProvider: asset.storageProvider,
               channelToken: ctx.channel.token,
@@ -177,17 +182,24 @@ export class LocalStorageStrategy implements AssetStorageStrategy {
     }
   }
 
-  async delete(ctx: RequestContext, asset: Asset): Promise<void> {
+  async delete(
+    ctx: RequestContext,
+    asset: Asset & { variants: ImageVariant[] },
+  ): Promise<void> {
     const dbClient = this.prisma
 
-    await this.fileSystemService.deleteFile(asset.source)
+    await Promise.all([
+      this.fileSystemService.deleteFile(asset.source),
+      ...asset.variants.map((variant) =>
+        this.fileSystemService.deleteFile(variant.source),
+      ),
+    ])
 
     await dbClient.asset.delete({
       where: { id: asset.id, channelToken: ctx.channel.token },
     })
   }
 
-  // Note: This method should be used cautiously and not in production environments
   async deleteAll(): Promise<void> {
     await this.prisma.imageVariant.deleteMany()
     await this.prisma.asset.deleteMany()

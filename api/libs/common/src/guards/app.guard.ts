@@ -56,8 +56,6 @@ export class AppGuard implements CanActivate {
       token = this.extractJwtFromAuthorizationHeader(context)
     }
 
-    console.log({ token })
-
     if (!token)
       throw new UnauthorizedException(
         'Authorization token is missing or invalid',
@@ -97,14 +95,10 @@ export class AppGuard implements CanActivate {
 
     if (isGraphQL) {
       const gqlContext = GqlExecutionContext.create(context).getContext()
-      console.log({ gqlContext })
       const accessToken = gqlContext.req?.cookies?.access_token
-      console.log({ cookies: gqlContext.req?.cookies })
       return accessToken
     } else {
       const req = context.switchToHttp().getRequest()
-      console.log({ req })
-      console.log({ cookies: req?.cookies })
       return req?.cookies?.access_token
     }
   }

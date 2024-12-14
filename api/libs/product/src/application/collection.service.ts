@@ -89,8 +89,6 @@ export class CollectionService {
   ): Promise<PaginatedItemsResponse<Collection>> {
     const { cursor, where, orderBy } = params || {}
 
-    console.log(where)
-
     const validatedPaginatedParams =
       this.paginationValidator.validatePaginationParams({
         skip: params?.skip,
@@ -172,8 +170,6 @@ export class CollectionService {
     parentId: string,
     relations?: Record<string, boolean | object>,
   ): Promise<Collection> {
-    console.log({ id, parentId })
-
     await this.getById(ctx, id, relations) // Ensure collection exists
 
     return this.prisma.collection.update({
@@ -260,11 +256,7 @@ export class CollectionService {
 
     const rules = await this.getFiltersForCollections(allCollectionIds)
 
-    console.log(JSON.stringify({ rules }, null, 2))
-
     const where = this.buildCombinedFilter(rules)
-
-    console.log(JSON.stringify({ where }, null, 2))
 
     const validatedPaginationParams =
       this.paginationValidator.validatePaginationParams({

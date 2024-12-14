@@ -19,8 +19,6 @@ export const mutationFunction = async ({
 
   const channelToken = cookies.get('channel_token')
 
-  console.log({ url })
-
   const res = await fetch(url, {
     credentials: 'include',
     method,

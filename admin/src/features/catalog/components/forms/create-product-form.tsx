@@ -219,10 +219,6 @@ export default function CreateProductForm({ facets }: { facets: Facet[] }) {
     { label: 'SEO', node: seoMetadataForm },
   ]
 
-  useEffect(() => {
-    console.log({ values })
-  }, [values])
-
   return (
     <FormProvider {...formMethods}>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -251,10 +247,6 @@ function PublishCard({
 
   const isPrivate = watch('isPrivate')
   const facetValueIds = watch('facetValueIds')
-
-  useEffect(() => {
-    console.log('facetValueIds', facetValueIds)
-  }, [facetValueIds])
 
   return (
     <Card sx={{ p: 0 }}>

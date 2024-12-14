@@ -32,7 +32,6 @@ export class CollectionResolver {
     parentId?: string | null,
     @Args('pagination', { nullable: true }) pagination?: PaginationInput,
   ): Promise<PaginatedItemsResponse<Collection>> {
-    console.log({ parentId })
     return this.collectionService.getMany(ctx, {
       where: { parentId },
       ...pagination,

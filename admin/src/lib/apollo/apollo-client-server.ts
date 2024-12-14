@@ -14,8 +14,6 @@ const authLink = setContext(async (operation, { headers }) => {
   const channelToken = cookieStore.get('channel_token')?.value || ''
   const accessToken = cookieStore.get('access_token')?.value || ''
 
-  console.log({ accessToken })
-
   const cookieHeader = accessToken ? `access_token=${accessToken}` : ''
 
   return {

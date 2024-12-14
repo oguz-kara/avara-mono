@@ -10,8 +10,6 @@ export async function middleware(req: NextRequest) {
     (path) => pathname === path || pathname.startsWith(`${path}`)
   )
 
-  console.log({ pathname, isPublicPath })
-
   if (isPublicPath) {
     return NextResponse.next()
   }

@@ -35,7 +35,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({
 
   const fetchCurrentUser = async () => {
     const response = await refetch()
-    console.log({ response })
     setCurrentUser(response.data?.activeUser)
   }
 

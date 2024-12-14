@@ -42,7 +42,6 @@ export class FacetResolver {
     @Args('skip', { type: () => Number, nullable: true }) skip?: number,
     @Args('take', { type: () => Number, nullable: true }) take?: number,
   ): Promise<PaginatedItemsResponse<Facet>> {
-    console.log(JSON.stringify({ relations }, null, 2))
     return this.facetService.getMany(ctx, relations, { skip, take })
   }
 

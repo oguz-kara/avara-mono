@@ -16,7 +16,6 @@ import {
 } from '.'
 import { PaginationValidator, RequestContextModule } from '@av/common'
 import { PrismaService } from '@av/database'
-
 import { LocalFileSystemService } from './infrastructure/services/local-file-system.service'
 import { PathService } from './infrastructure/services/path.service'
 
@@ -30,9 +29,25 @@ import { PathService } from './infrastructure/services/path.service'
       }),
       inject: [ConfigService],
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
-      serveRoot: '/uploads',
+    ServeStaticModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => {
+        const isProduction = config.get('NODE_ENV') === 'production'
+        const rootPath = isProduction
+          ? join(
+              config.get('ASSET_STORAGE_PATH') || '/usr/src/app/uploads',
+              'preview',
+            )
+          : join(__dirname, '..', 'uploads')
+
+        return [
+          {
+            rootPath,
+            serveRoot: '/uploads',
+          },
+        ]
+      },
+      inject: [ConfigService],
     }),
   ],
   providers: [

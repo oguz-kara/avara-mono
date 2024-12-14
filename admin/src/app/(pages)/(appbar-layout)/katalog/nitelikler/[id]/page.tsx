@@ -13,7 +13,5 @@ export default async function Page({
   const sdk = await initializeSDK()
   const facet = await sdk.facets.getFacetById(id)
 
-  console.log({ facet })
-
   return <UpdateFacetForm initialValues={facet} />
 }

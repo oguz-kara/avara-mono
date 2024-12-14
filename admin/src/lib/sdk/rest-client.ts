@@ -52,9 +52,6 @@ export class RestClient {
       url += `?${queryString}`
     }
 
-    console.log({ params })
-    console.log({ channelToken: this.channelToken })
-
     return this.request(url, {
       method: 'GET',
       headers: {

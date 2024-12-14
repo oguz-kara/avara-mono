@@ -42,7 +42,7 @@ export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
     imageExtension: 'webp',
     supportedTypes: supportedTypes,
     storage: {
-      localPath: '/assets/preview',
+      localPath: '/uploads/preview',
       maxFileSize: 1024 * 1024 * 10,
       strategy: process.env.ASSET_STORAGE_STRATEGY || 'LOCAL',
       host: process.env.STORAGE_HOST,
