@@ -8,6 +8,8 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN npx prisma generate
 RUN pnpm build
+RUN mkdir -p /usr/src/app/uploads/preview
+RUN chown -R node:node /usr/src/app/uploads
 
 EXPOSE 3000
 

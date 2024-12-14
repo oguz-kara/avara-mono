@@ -29,6 +29,8 @@ services:
       - "3002:3000"
     networks:
       - avara-network
+    volumes:
+      - uploads-data:/usr/src/app/uploads
 
   admin:
     build:

@@ -29,7 +29,12 @@ export class LocalStorageStrategy implements AssetStorageStrategy {
     private readonly pathService: PathService,
     private readonly filenameNormalizer: FilenameNormalizer,
   ) {
-    this.basePath = path.resolve(__dirname, 'assets', 'preview')
+    // this.basePath = path.resolve('/usr/src/app/uploads', 'preview')
+    const envPath =
+      process.env.NODE_ENV === 'production'
+        ? [process.env.ASSET_STORAGE_PATH, 'preview']
+        : [__dirname, '..', 'uploads', 'preview']
+    this.basePath = path.resolve(...envPath)
     this.localPath =
       this.configService.get<string>('asset.storage.localPath') || ''
     this.variationSizes = {

@@ -31,8 +31,8 @@ import { PathService } from './infrastructure/services/path.service'
       inject: [ConfigService],
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'dist', 'assets', 'preview'),
-      serveRoot: '/assets/preview',
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
     }),
   ],
   providers: [
