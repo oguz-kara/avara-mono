@@ -133,7 +133,7 @@ export const UPDATE_COLLECTION = gql`
   }
 `
 export const EDIT_PARENT_COLLECTION = gql`
-  mutation EditParentCollection($id: String!, $parentId: String!) {
+  mutation EditParentCollection($id: String!, $parentId: String) {
     editParentCollection(id: $id, parentId: $parentId) {
       id
       name

@@ -69,12 +69,8 @@ const CollectionTree: React.FC<{
   const filteredTreeData = filterTree(treeData, searchTerm)
 
   const fetchCollectionsByParentId = async (parentId: string) => {
-    if (!parentId) return
-
-    console.log({ parentId })
-
     const result = await refetch({
-      parentId: parentId as any,
+      parentId: parentId || null,
     })
 
     if (result.data?.collections.items) {
@@ -88,18 +84,8 @@ const CollectionTree: React.FC<{
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
 
-    if (!over || active.id === over.id) {
-      if (!over) {
-        const activeId = String(active.id)
-        const updatedTree = updateTreeStructure(treeData, activeId, null)
-        setTreeData(updatedTree)
-      }
-      return
-    }
-
     const activeId = String(active.id)
-    const overId = String(over.id)
-    const parentId = overId === 'root' ? null : overId
+    const parentId = over?.id ? String(over.id) : null
     const updatedTree = updateTreeStructure(treeData, activeId, parentId)
     setTreeData(updatedTree)
 

@@ -69,7 +69,8 @@ export class CollectionResolver {
   async editParentCollection(
     @Ctx() ctx: RequestContext,
     @Args('id', { type: () => String }) id: string,
-    @Args('parentId', { type: () => String }) parentId: string,
+    @Args('parentId', { type: () => String, nullable: true })
+    parentId: string | null,
   ): Promise<Collection> {
     return this.collectionService.editParent(ctx, id, parentId)
   }

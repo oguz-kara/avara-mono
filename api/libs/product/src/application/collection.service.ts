@@ -172,14 +172,16 @@ export class CollectionService {
     parentId: string,
     relations?: Record<string, boolean | object>,
   ): Promise<Collection> {
+    console.log({ id, parentId })
+
     await this.getById(ctx, id, relations) // Ensure collection exists
 
     return this.prisma.collection.update({
       where: { id },
       data: {
-        parent: {
-          connect: { id: parentId },
-        },
+        ...(parentId !== null
+          ? { parent: { connect: { id: parentId } } }
+          : { parent: { disconnect: true } }),
         updatedBy: ctx.user?.id || 'system',
       },
     })

@@ -61,10 +61,11 @@ const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const handleExpandToggle = async (e: React.MouseEvent) => {
     e.stopPropagation()
+
     if (!open && !hasChildren && !collection.fetchedChildren) {
-      // Fetch children if not already fetched
       await onExpand(collection.id)
     }
+
     setOpen(!open)
   }
 

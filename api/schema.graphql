@@ -380,7 +380,7 @@ type Mutation {
   deleteFacetValue(id: ID!): FacetValue!
   deleteProduct(id: String!): Product!
   deleteSeoMetadata(id: String!): SeoMetadata!
-  editParentCollection(id: String!, parentId: String!): Collection!
+  editParentCollection(id: String!, parentId: String): Collection!
   editPermissionDetails(id: String!, input: UpdatePermissionDto!): Permission!
   recoverPermissionById(input: IDInput!): Permission!
   removePermissionById(input: IDInput!): Permission!

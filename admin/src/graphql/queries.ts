@@ -262,8 +262,8 @@ export const GET_FACET_VALUE = gql`
 `
 
 export const GET_COLLECTIONS = gql`
-  query GetCollections($skip: Int, $take: Int) {
-    collections(pagination: { skip: $skip, take: $take }) {
+  query GetCollections($skip: Int, $take: Int, $parentId: String) {
+    collections(pagination: { skip: $skip, take: $take }, parentId: $parentId) {
       items {
         id
         name
