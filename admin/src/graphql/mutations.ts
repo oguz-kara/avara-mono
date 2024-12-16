@@ -206,3 +206,11 @@ export const AUTHENTICATE_USER = gql`
     }
   }
 `
+
+export const DELETE_PRODUCTS = gql`
+  mutation DeleteProducts($ids: [String!]!) {
+    deleteProducts(ids: $ids) {
+      count
+    }
+  }
+`

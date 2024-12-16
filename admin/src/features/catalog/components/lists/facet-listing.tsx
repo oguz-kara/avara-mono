@@ -16,8 +16,6 @@ import {
   DialogContent,
   DialogTitle,
   Dialog,
-  Snackbar,
-  IconButton,
   CardActions,
   CardContent,
   Card,
@@ -25,7 +23,6 @@ import {
 import React, { useState } from 'react'
 import { useMutation } from '@avc/lib/hooks/use-mutation'
 import { DELETE_FACET_LIST } from '@avc/graphql/mutations'
-import CloseIcon from '@mui/icons-material/Close'
 import FormLayout from '@avc/components/layout/form-layout'
 
 const columns: GridColDef[] = [

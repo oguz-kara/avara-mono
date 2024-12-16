@@ -205,6 +205,24 @@ export class ProductService {
     })
   }
 
+  async deleteMany(
+    ctx: RequestContext,
+    ids: string[],
+    relations?: Record<string, boolean | object>,
+  ): Promise<Prisma.BatchPayload> {
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: ids } },
+      include: relations ?? undefined,
+    })
+
+    if (products.length !== ids.length)
+      throw new NotFoundException(`Products not found: ${ids.join(', ')}`)
+
+    return this.prisma.product.deleteMany({
+      where: { id: { in: ids } },
+    })
+  }
+
   async markAsDeleted(
     ctx: RequestContext,
     id: string,

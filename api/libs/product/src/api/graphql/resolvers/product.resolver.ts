@@ -18,6 +18,8 @@ import {
 } from '../types/product.types'
 import { FindProductsResponse } from '../inputs/product.dto'
 import { ProductService } from '@av/product/application/product.service'
+import { Prisma } from '@prisma/client'
+import { BatchPayload } from '@av/database'
 
 @Resolver(() => Product)
 @UseInterceptors(RequestContextInterceptor)
@@ -80,6 +82,15 @@ export class ProductResolver {
     @Args('id', { type: () => String }) id: string,
   ): Promise<Product> {
     return this.productService.delete(ctx, id)
+  }
+
+  @Allow(Permission.DELETE_PRODUCT_GLOBAL, Permission.DELETE_CATALOG_GLOBAL)
+  @Mutation(() => BatchPayload)
+  async deleteProducts(
+    @Ctx() ctx: RequestContext,
+    @Args('ids', { type: () => [String] }) ids: string[],
+  ): Promise<Prisma.BatchPayload> {
+    return this.productService.deleteMany(ctx, ids)
   }
 
   @Allow(Permission.READ_PRODUCT_GLOBAL, Permission.READ_CATALOG_GLOBAL)

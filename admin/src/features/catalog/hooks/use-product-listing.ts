@@ -30,7 +30,7 @@ export const useProductListing = ({
 
   const { refetch, loading } = useQuery(SEARCH_PRODUCTS, {
     variables: queryVariables,
-    fetchPolicy: 'network-only',
+    fetchPolicy: 'no-cache',
     skip: true,
     onCompleted: (data) => {
       setProducts(data?.searchProducts?.items || [])
@@ -71,5 +71,6 @@ export const useProductListing = ({
     totalItems,
     setTerm,
     term,
+    refetch,
   }
 }

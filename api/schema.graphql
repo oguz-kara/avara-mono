@@ -30,6 +30,10 @@ type AuthenticateUserSuccess {
   token: String!
 }
 
+type BatchPayload {
+  count: Float!
+}
+
 type Channel {
   code: String!
   createdAt: DateTime!
@@ -379,6 +383,7 @@ type Mutation {
   deleteFacetList(ids: [ID!]!): Float!
   deleteFacetValue(id: ID!): FacetValue!
   deleteProduct(id: String!): Product!
+  deleteProducts(ids: [String!]!): BatchPayload!
   deleteSeoMetadata(id: String!): SeoMetadata!
   editParentCollection(id: String!, parentId: String): Collection!
   editPermissionDetails(id: String!, input: UpdatePermissionDto!): Permission!

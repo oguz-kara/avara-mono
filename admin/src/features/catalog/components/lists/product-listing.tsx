@@ -1,6 +1,10 @@
 'use client'
 import Box from '@avc/components/ui/box'
-import { DataGrid, GridColDef } from '@avc/components/ui/data-grid'
+import {
+  DataGrid,
+  GridColDef,
+  GridDeleteIcon,
+} from '@avc/components/ui/data-grid'
 import { turkishLocaleText } from '../../locale/turkish-locale-text'
 import TextField from '@avc/components/ui/text-field'
 import Stack from '@avc/components/ui/stack'
@@ -13,6 +17,11 @@ import FormLayout from '@avc/components/layout/form-layout'
 import { Card, CardActions, CardContent } from '@mui/material'
 import { useProductListing } from '../../hooks/use-product-listing'
 import { Product } from '@avc/generated/graphql'
+import { useState } from 'react'
+import { useMutation } from '@avc/lib/hooks/use-mutation'
+import { DELETE_PRODUCTS } from '@avc/graphql/mutations'
+import { useSnackbar } from '@avc/context/snackbar-context'
+import { useRouter } from 'next/navigation'
 
 const columns: GridColDef[] = [
   { field: 'featuredAssetId', headerName: 'Resim', width: 50 },
@@ -69,6 +78,8 @@ const columns: GridColDef[] = [
 ]
 
 export default function ProductListing() {
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const router = useRouter()
   const {
     products,
     paginationModel,
@@ -78,6 +89,16 @@ export default function ProductListing() {
     term,
     setTerm,
   } = useProductListing()
+  const { snackbar } = useSnackbar()
+
+  const [deleteProducts, { loading: isDeletingProducts }] = useMutation(
+    DELETE_PRODUCTS,
+    {
+      onCompleted: (res) => {
+        setSelectedIds([])
+      },
+    }
+  )
 
   const rows = products.map((product: Product) => ({
     ...product,
@@ -87,6 +108,26 @@ export default function ProductListing() {
       ?.map((facetValue) => facetValue.name)
       .join(', '),
   }))
+
+  const handleDelete = async () => {
+    const result = await deleteProducts({
+      variables: {
+        ids: selectedIds,
+      },
+    })
+
+    if (result.data?.deleteProducts?.count === selectedIds.length) {
+      snackbar({
+        message: 'Ürünler başarıyla silindi',
+        variant: 'success',
+      })
+    } else {
+      snackbar({
+        message: 'Ürünler silinirken bir hata oluştu',
+        variant: 'error',
+      })
+    }
+  }
 
   const leftSide = (
     <Box sx={{ px: 4, pb: 4 }}>
@@ -112,6 +153,8 @@ export default function ProductListing() {
         pageSizeOptions={[25, 50, 100]}
         paginationMode="server"
         loading={loading}
+        rowSelectionModel={selectedIds}
+        onRowSelectionModelChange={(model) => setSelectedIds(model as string[])}
         rowCount={totalItems}
         checkboxSelection
         disableRowSelectionOnClick
@@ -156,7 +199,7 @@ export default function ProductListing() {
           p: 2,
         }}
       >
-        <Box>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <Link href="/katalog/urunler/yeni">
             <Button
               variant="contained"
@@ -165,6 +208,16 @@ export default function ProductListing() {
               Ürün Ekle
             </Button>
           </Link>
+          {selectedIds.length > 0 && (
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={<GridDeleteIcon />}
+              onClick={handleDelete}
+            >
+              ({selectedIds.length}) Seçili ürünleri sil
+            </Button>
+          )}
         </Box>
       </CardActions>
     </Card>
