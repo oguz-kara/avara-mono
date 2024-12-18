@@ -13,5 +13,9 @@ export default async function UpdateCollectionPage({
   const sdk = await initializeSDK()
   const collection = await sdk.collections.getCollectionById(id)
 
+  if (!collection) {
+    return redirect('/sayfa-bulunamadi')
+  }
+
   return <UpdateCollectionForm collection={collection} />
 }

@@ -170,11 +170,16 @@ const CollectionTree: React.FC<{
   }
 
   useEffect(() => {
+    console.log({ data })
     if (data) {
       const tree = buildTree(data.collections.items as Collection[])
       setTreeData(tree as ExtendedCollection[])
     }
   }, [data])
+
+  useEffect(() => {
+    console.log({ error })
+  }, [error])
 
   if (loading) return <Typography>Loading collections...</Typography>
   if (error)

@@ -234,6 +234,7 @@ export default function UpdateCollectionForm({
           render={({ field }) => (
             <TextField
               {...field}
+              value={field.value || ''}
               label="İsim"
               required
               error={!!errors.name}
@@ -251,6 +252,7 @@ export default function UpdateCollectionForm({
           render={({ field }) => (
             <TextField
               {...field}
+              value={field.value || ''}
               label="Slug"
               error={!!errors.slug}
               fullWidth
@@ -271,7 +273,7 @@ export default function UpdateCollectionForm({
             <RichTextEditor
               ref={rteRef}
               extensions={[StarterKit]}
-              content={field.value}
+              content={field.value || ''}
               onUpdate={({ editor }) => {
                 field.onChange(editor.getHTML())
               }}

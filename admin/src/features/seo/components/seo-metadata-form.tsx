@@ -39,6 +39,7 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
         render={({ field, fieldState }) => (
           <TextField
             {...field}
+            value={field.value || ''}
             label="Sayfa Başlığı"
             required
             error={!!fieldState.error}
@@ -59,6 +60,7 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
         render={({ field, fieldState }) => (
           <TextField
             {...field}
+            value={field.value || ''}
             label="Meta Açıklama"
             required
             error={!!fieldState.error}
@@ -80,6 +82,7 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
         render={({ field }) => (
           <TextField
             {...field}
+            value={field.value || ''}
             label="Anahtar Kelimeler"
             placeholder="Virgülle ayırarak yazın"
             helperText="Örnek: online alışveriş, indirim, kampanya"
@@ -95,6 +98,7 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
         render={({ field }) => (
           <TextField
             {...field}
+            value={field.value || ''}
             label="Canonical URL"
             placeholder="https://example.com/sayfa"
             helperText="İçeriğin asıl kaynağını belirten URL"
@@ -124,6 +128,7 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
               render={({ field }) => (
                 <TextField
                   {...field}
+                  value={field.value || ''}
                   label="Sosyal Medya Başlığı"
                   helperText="Facebook, Twitter gibi platformlarda görünecek başlık"
                   fullWidth
@@ -139,6 +144,7 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
               render={({ field }) => (
                 <TextField
                   {...field}
+                  value={field.value || ''}
                   label="Sosyal Medya Açıklaması"
                   helperText="Sosyal medya paylaşımlarında görünecek açıklama"
                   fullWidth
@@ -156,6 +162,7 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
               render={({ field }) => (
                 <TextField
                   {...field}
+                  value={field.value || ''}
                   label="Sosyal Medya Görseli"
                   helperText="Paylaşımlarda kullanılacak görsel URL'i"
                   type="url"
@@ -180,6 +187,7 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
               render={({ field }) => (
                 <TextField
                   {...field}
+                  value={field.value || ''}
                   label="Robots Direktifleri"
                   placeholder="Örnek: index, follow"
                   helperText="Arama motoru botları için özel yönergeler"
@@ -205,7 +213,10 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
                 name="seoMetadata.schemaMarkup"
                 control={control}
                 render={({ field }) => (
-                  <JsonEditor value={field.value} onChange={field.onChange} />
+                  <JsonEditor
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                  />
                 )}
               />
             </Box>
@@ -240,9 +251,12 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
               render={({ field }) => (
                 <TextField
                   {...field}
+                  value={field.value || ''}
                   label="Öncelik"
                   type="number"
-                  inputProps={{ min: 0, max: 1, step: 0.1 }}
+                  slotProps={{
+                    htmlInput: { min: 0, max: 1, step: 0.1 },
+                  }}
                   helperText="Site haritası için öncelik değeri (0.0 - 1.0 arası)"
                   fullWidth
                   sx={{ mt: 2 }}
@@ -257,6 +271,7 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
               render={({ field }) => (
                 <TextField
                   {...field}
+                  value={field.value || ''}
                   label="Dil ve Bölge"
                   placeholder="Örnek: tr-TR"
                   helperText="Sayfa içeriğinin dil ve bölge hedeflemesi"
@@ -273,6 +288,7 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
               render={({ field }) => (
                 <TextField
                   {...field}
+                  value={field.value || ''}
                   label="Alternatif URL'ler"
                   placeholder="Alternatif sayfa URL'leri"
                   helperText="Farklı dil veya bölgeler için alternatif sayfalar"

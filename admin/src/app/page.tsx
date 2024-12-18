@@ -1,9 +1,5 @@
-import Typography from '@mui/material/Typography'
+import { redirect } from 'next/navigation'
 
 export default function Home() {
-  return (
-    <div>
-      <Typography variant="h1">Hello World</Typography>
-    </div>
-  )
+  redirect('/katalog/urunler')
 }
