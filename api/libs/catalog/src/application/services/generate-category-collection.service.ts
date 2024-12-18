@@ -73,7 +73,6 @@ export class GenerateCategoryCollectionService {
             ctx,
             categoryCollection.children,
             collection.id,
-            categoryCollection.title,
           )
         }
       } else if (typeof categoryCollection === 'string') {
@@ -129,7 +128,7 @@ export class GenerateCategoryCollectionService {
   private getAiPrompt(categoryName: string, parentName: string | null = null) {
     const prompt = `
   You are a seasoned content creator with expertise in industrial lubricants for B2B catalogs. Your task is to generate detailed and engaging content for a specific product category based on the provided category name.
-  
+
   Category Name: "${categoryName}"
   Parent Category Name: "${parentName}"
 
@@ -208,20 +207,21 @@ export class GenerateCategoryCollectionService {
            }
          }
   
-  Output Requirements:
-  
-  - Language: All output must be in Turkish.
-  - Format: Provide the output in a well-structured JSON format with the following keys:
-    - name
-    - slug
-    - description
-    - seoMetadata
-      - title
-      - description
-      - keywords
-      - ogTitle
-      - ogDescription
-      - schemaMarkup
+  Output Format:
+
+  Language: All output must be in Turkish.
+  Format: Provide the output strictly as a JSON object without any additional text, code block syntax, or formatting. Ensure it is directly parseable using JSON.parse().
+  Keys: The JSON object must contain the following keys:
+        name: The exact category name provided without changes.
+        slug: A URL-friendly slug derived from the category name.
+        description: A detailed description in rich HTML format.
+        seoMetadata: An object with the following keys:
+            title: The SEO title.
+            description: The SEO meta description.
+            keywords: A comma-separated list of keywords.
+            ogTitle: The Open Graph title.
+            ogDescription: The Open Graph description.
+            schemaMarkup: A structured JSON-LD object adhering to Schema.org standards.
   
   Example Output:
   
