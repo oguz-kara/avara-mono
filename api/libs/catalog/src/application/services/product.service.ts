@@ -9,7 +9,7 @@ import { PaginationValidator } from '@av/common/utils/pagination.validator'
 import {
   CreateProductInput,
   UpdateProductInput,
-} from '../api/graphql/types/product.types'
+} from '../../api/graphql/types/product.types'
 
 @Injectable()
 export class ProductService {

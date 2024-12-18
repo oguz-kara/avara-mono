@@ -7,7 +7,7 @@ import {
   PaginationValidator,
   RequestContext,
 } from '@av/common'
-import { CreateFacetValueInput } from '../api/graphql/inputs/facet-value.dto'
+import { CreateFacetValueInput } from '../../api/graphql/inputs/facet-value.dto'
 
 @Injectable()
 export class FacetValueService {

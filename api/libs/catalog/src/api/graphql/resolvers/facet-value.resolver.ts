@@ -9,7 +9,7 @@ import {
 import { FacetValue, FindFacetValuesResponse } from '../types/facet-value.types'
 import { CreateFacetValueInput } from '../inputs/facet-value.dto'
 import { UpdateFacetValueInput } from '../inputs/facet-value.dto'
-import { FacetValueService } from '@av/product/application/facet-value.service'
+import { FacetValueService } from '@av/catalog/application/services/facet-value.service'
 import { UseInterceptors } from '@nestjs/common'
 
 @Resolver(() => FacetValue)

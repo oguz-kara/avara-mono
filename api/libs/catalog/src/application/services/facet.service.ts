@@ -10,7 +10,7 @@ import {
 import {
   CreateFacetInput,
   UpdateFacetInput,
-} from '../api/graphql/inputs/facet.dto'
+} from '../../api/graphql/inputs/facet.dto'
 
 @Injectable()
 export class FacetService {

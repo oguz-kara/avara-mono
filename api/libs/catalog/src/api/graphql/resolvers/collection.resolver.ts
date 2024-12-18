@@ -16,7 +16,7 @@ import {
   CreateCollectionInput,
   UpdateCollectionInput,
 } from '../inputs/collection.dto'
-import { CollectionService } from '@av/product/application/collection.service'
+import { CollectionService } from '@av/catalog/application/services/collection.service'
 import { Product } from '../types/product.types'
 import { FindProductsResponse } from '../inputs/product.dto'
 
@@ -38,7 +38,7 @@ export class CollectionResolver {
     })
   }
 
-  @Query(() => Collection)
+  @Query(() => Collection, { nullable: true })
   async collection(
     @Ctx() ctx: RequestContext,
     @Args('id', { type: () => String }) id: string,

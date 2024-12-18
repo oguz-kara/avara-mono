@@ -11,8 +11,8 @@ import { PaginationValidator } from '@av/common/utils/pagination.validator'
 import {
   CreateCollectionInput,
   UpdateCollectionInput,
-} from '../api/graphql/inputs/collection.dto'
-import { RuleType } from '../api/graphql/enums/rule.enum'
+} from '../../api/graphql/inputs/collection.dto'
+import { RuleType } from '../../api/graphql/enums/rule.enum'
 
 @Injectable()
 export class CollectionService {

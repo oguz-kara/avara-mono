@@ -1,7 +1,7 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
-import { ProductModule } from '@av/product'
+import { ProductModule } from '@av/catalog'
 import { ChannelModule } from '@av/channel'
 import { RequestContextModule } from '@av/common'
 import { AssetModule } from '@av/asset'

@@ -285,6 +285,10 @@ type Facet {
   values: [FacetValue!]
 }
 
+type FacetCollectionResponse {
+  success: String!
+}
+
 type FacetValue {
   code: String!
   facet: Facet
@@ -348,6 +352,13 @@ type FindUsersResponseType {
   pagination: PaginatedResponseMeta!
 }
 
+type GeneratedCollection {
+  description: String!
+  name: String!
+  seoMetadata: SEOMetadata!
+  slug: String!
+}
+
 input IDInput {
   id: String!
 }
@@ -360,6 +371,20 @@ scalar JSON
 input LoginUserDto {
   email: String!
   password: String!
+}
+
+type Logo {
+  type: String!
+  url: String!
+}
+
+type MainEntity {
+  description: String!
+  image: String!
+  name: String!
+  publisher: Publisher!
+  type: String!
+  url: String!
 }
 
 type Mutation {
@@ -461,11 +486,17 @@ type Product {
   updatedBy: String
 }
 
+type Publisher {
+  logo: Logo!
+  name: String!
+  type: String!
+}
+
 type Query {
   activeUser: UserType
   channel(id: Int!): Channel!
   channels: [Channel!]!
-  collection(id: String!): Collection!
+  collection(id: String!): Collection
   collectionProducts(collectionId: String!, pagination: PaginationInput): FindProductsResponse!
   collections(pagination: PaginationInput, parentId: String): FindCollectionsResponse!
   facet(id: ID!): Facet!
@@ -476,6 +507,8 @@ type Query {
   findRoleById(id: String!): Role
   findUserByEmail(input: EmailInput!): UserType
   findUserById(input: IDInput!): UserType
+  generateFacetCollections(data: JSON!): FacetCollectionResponse!
+  getGeneratedCollection(title: String!): GeneratedCollection!
   getOrCreateDefaultChannel(token: String!): Channel!
   getUserAccessUI: [NavbarResponse!]!
   permissions(input: PaginationInput): FindPermissionsResponseType!
@@ -525,6 +558,17 @@ type Role {
 enum RuleType {
   FACET_VALUE_FILTER
   PRODUCT_NAME_FILTER
+}
+
+type SEOMetadata {
+  description: String!
+  keywords: String!
+  ogDescription: String!
+  ogTitle: String!
+
+  """Schema Markup"""
+  schemaMarkup: JSON
+  title: String!
 }
 
 """The type of scope"""

@@ -30,11 +30,11 @@
       "@av/request-context/*": [
         "libs/request-context/src/*"
       ],
-      "@av/product": [
-        "libs/product/src"
+      "@av/catalog": [
+        "libs/catalog/src"
       ],
-      "@av/product/*": [
-        "libs/product/src/*"
+      "@av/catalog/*": [
+        "libs/catalog/src/*"
       ],
       "@av/gateway": [
         "libs/gateway/src"
@@ -71,6 +71,12 @@
       ],
       "@av/seo/*": [
         "libs/seo/src/*"
+      ],
+      "@av/ai": [
+        "libs/ai/src"
+      ],
+      "@av/ai/*": [
+        "libs/ai/src/*"
       ]
     }
   }

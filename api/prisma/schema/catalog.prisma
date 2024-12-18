@@ -42,7 +42,6 @@ model FacetValue {
 model Product {
     id              String  @id @default(uuid())
     featuredAssetId String?
-    seoMetadataId   String? @unique
 
     name          String
     slug          String?
@@ -55,7 +54,7 @@ model Product {
     documents     Asset[]      @relation("ProductDocuments")
     facetValues   FacetValue[] @relation("ProductFacetValues")
 
-    seoMetadata SeoMetadata? @relation(fields: [seoMetadataId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    seoMetadata SeoMetadata?
 
     createdAt DateTime? @default(now())
     updatedAt DateTime? @updatedAt
@@ -67,7 +66,6 @@ model Product {
 
 model Collection {
     id              String  @id @default(uuid())
-    seoMetadataId   String? @unique
     parentId        String?
     featuredAssetId String? @unique
 
@@ -84,7 +82,7 @@ model Collection {
 
     featuredAsset Asset?       @relation("CollectionFeaturedImage", fields: [featuredAssetId], references: [id])
     documents     Asset[]      @relation("CollectionDocuments")
-    seoMetadata   SeoMetadata? @relation(fields: [seoMetadataId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    seoMetadata   SeoMetadata?
     parent        Collection?  @relation("CollectionHierarchy", fields: [parentId], references: [id])
     children      Collection[] @relation("CollectionHierarchy")
 

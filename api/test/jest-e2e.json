@@ -28,6 +28,8 @@
     "@av/user/(.*)": "<rootDir>/../libs/user/src/$1",
     "@av/user": "<rootDir>/../libs/user/src",
     "@av/seo/(.*)": "<rootDir>/../libs/seo/src/$1",
-    "@av/seo": "<rootDir>/../libs/seo/src"
+    "@av/seo": "<rootDir>/../libs/seo/src",
+    "ai/ai/(.*)": "<rootDir>/../libs/ai/src/$1",
+    "ai/ai": "<rootDir>/../libs/ai/src"
   }
 }

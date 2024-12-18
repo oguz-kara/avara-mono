@@ -25,13 +25,13 @@
         "tsConfigPath": "libs/request-context/tsconfig.lib.json"
       }
     },
-    "product": {
+    "catalog": {
       "type": "library",
-      "root": "libs/product",
+      "root": "libs/catalog",
       "entryFile": "index",
-      "sourceRoot": "libs/product/src",
+      "sourceRoot": "libs/catalog/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/product/tsconfig.lib.json"
+        "tsConfigPath": "libs/catalog/tsconfig.lib.json"
       }
     },
     "gateway": {
@@ -86,6 +86,15 @@
       "sourceRoot": "libs/seo/src",
       "compilerOptions": {
         "tsConfigPath": "libs/seo/tsconfig.lib.json"
+      }
+    },
+    "ai": {
+      "type": "library",
+      "root": "libs/ai",
+      "entryFile": "index",
+      "sourceRoot": "libs/ai/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/ai/tsconfig.lib.json"
       }
     }
   }

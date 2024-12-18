@@ -17,7 +17,7 @@ import {
   UpdateProductInput,
 } from '../types/product.types'
 import { FindProductsResponse } from '../inputs/product.dto'
-import { ProductService } from '@av/product/application/product.service'
+import { ProductService } from '@av/catalog/application/services/product.service'
 import { Prisma } from '@prisma/client'
 import { BatchPayload } from '@av/database'
 
