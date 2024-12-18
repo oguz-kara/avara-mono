@@ -31,6 +31,11 @@ export class GenerateCategoryCollectionService {
 
     for (const categoryCollection of categoryCollectionInput) {
       if (typeof categoryCollection === 'object') {
+        console.log(
+          'kategori koleksiyonu oluşturuluyor -> ',
+          categoryCollection.title,
+        )
+
         const facetValue = await this.createFacetValueIfNotExistsAndReturn(
           ctx,
           facet.id,
@@ -50,7 +55,7 @@ export class GenerateCategoryCollectionService {
           ? await this.aiService.generateResponse(prompt)
           : null
 
-        console.log('generated collection data -> ', collectionData?.name)
+        console.log('oluşturulan koleksiyon verisi -> ', collectionData?.name)
 
         const collection = !createdCollection
           ? await this.createCollectionIfNotExists(
@@ -62,13 +67,16 @@ export class GenerateCategoryCollectionService {
             )
           : createdCollection
 
-        console.log('created collection -> ', collection?.name)
+        console.log('koleksiyon oluşturuldu -> ', collection?.name)
 
         if (
           categoryCollection.children &&
           categoryCollection.children.length > 0
         ) {
-          console.log('generating children for -> ', categoryCollection.title)
+          console.log(
+            'alt kategoriler oluşturuluyor -> ',
+            categoryCollection.title,
+          )
           await this.generateCategoryCollection(
             ctx,
             categoryCollection.children,
@@ -76,6 +84,10 @@ export class GenerateCategoryCollectionService {
           )
         }
       } else if (typeof categoryCollection === 'string') {
+        console.log(
+          'kategori koleksiyonu oluşturuluyor -> ',
+          categoryCollection,
+        )
         const facetValue = await this.createFacetValueIfNotExistsAndReturn(
           ctx,
           facet.id,
@@ -95,7 +107,7 @@ export class GenerateCategoryCollectionService {
           ? await this.aiService.generateResponse(prompt)
           : null
 
-        console.log('generated collection data -> ', collectionData?.name)
+        console.log('oluşturulan koleksiyon verisi -> ', collectionData?.name)
 
         const collection = !createdCollection
           ? await this.createCollectionIfNotExists(
@@ -107,8 +119,8 @@ export class GenerateCategoryCollectionService {
             )
           : createdCollection
 
-        console.log('created collection -> ', collection?.name)
-        console.log('collection no more has children!')
+        console.log('koleksiyon oluşturuldu -> ', collection?.name)
+        console.log('koleksiyonun başka alt kategorisi yok!')
       }
     }
 
