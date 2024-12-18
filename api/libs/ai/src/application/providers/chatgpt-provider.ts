@@ -17,7 +17,7 @@ export class ChatGPTProvider implements AIProvider {
 
   async generateResponse(
     prompt: string,
-    model: AIModel = 'gpt-4-turbo',
+    model: AIModel = 'gpt-4',
   ): Promise<string> {
     try {
       const messages: ChatCompletionMessage[] = [

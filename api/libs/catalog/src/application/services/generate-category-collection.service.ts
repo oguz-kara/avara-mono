@@ -210,7 +210,7 @@ export class GenerateCategoryCollectionService {
   Output Format:
 
   Language: All output must be in Turkish.
-  Format: Provide the output strictly as a JSON object without any additional text, code block syntax, or formatting. Ensure it is directly parseable using JSON.parse().
+  Format: Provide the output strictly as a JSON object without any additional text, code block syntax, or formatting. Ensure it is directly parseable using JSON.parse() and it throws bad control character in string literal error, make sure to remove all the bad characters (not Turkish characters).
   Keys: The JSON object must contain the following keys:
         name: The exact category name provided without changes.
         slug: A URL-friendly slug derived from the category name.
