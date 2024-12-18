@@ -1,10 +1,15 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-export default function Page({ params }: { params: { notFound: string } }) {
+export default async function Page({
+  params,
+}: {
+  params: { notFound: string }
+}) {
+  const { notFound } = params
   const notFoundTranslations = ['sayfa-bulunamadi', 'page-not-found']
   const notFoundTranslation = notFoundTranslations.find(
-    (translation) => translation === params.notFound
+    (translation) => translation === notFound
   )
 
   if (!notFoundTranslation) {
