@@ -3,7 +3,6 @@ import { AIProvider } from '../interfaces/ai-provider.interface'
 import { ConfigService } from '@nestjs/config'
 import OpenAI from 'openai'
 import type { ChatCompletionMessage } from 'openai/resources/chat'
-import { AIModel } from '../types/version.type'
 
 @Injectable()
 export class ChatGPTProvider implements AIProvider {

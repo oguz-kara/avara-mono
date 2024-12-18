@@ -141,6 +141,7 @@ export class GenerateCategoryCollectionService {
     const prompt = `
   You are a seasoned content creator with expertise in industrial lubricants for B2B catalogs. Your task is to generate detailed and engaging content for a specific product category based on the provided category name.
 
+  Brand Name: Restoreplus
   Category Name: "${categoryName}"
   Parent Category Name: "${parentName}"
 
