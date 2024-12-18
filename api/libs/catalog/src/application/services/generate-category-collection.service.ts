@@ -62,7 +62,7 @@ export class GenerateCategoryCollectionService {
             )
           : createdCollection
 
-        console.log('created collection -> ', collection.name)
+        console.log('created collection -> ', collection?.name)
 
         if (
           categoryCollection.children &&
@@ -95,7 +95,7 @@ export class GenerateCategoryCollectionService {
           ? await this.aiService.generateResponse(prompt)
           : null
 
-        console.log('generated collection data -> ', collectionData.name)
+        console.log('generated collection data -> ', collectionData?.name)
 
         const collection = !createdCollection
           ? await this.createCollectionIfNotExists(
@@ -107,7 +107,7 @@ export class GenerateCategoryCollectionService {
             )
           : createdCollection
 
-        console.log('created collection -> ', collection.name)
+        console.log('created collection -> ', collection?.name)
         console.log('collection no more has children!')
       }
     }
