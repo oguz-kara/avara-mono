@@ -20,6 +20,7 @@ export class GenerateCategoryCollectionService {
     ctx: RequestContext,
     categoryCollectionInput: CategoryCollectionInput[] | string[],
     parentId: string | null = null,
+    parentName: string | null = null,
   ) {
     if (categoryCollectionInput.length === 0) {
       return null
@@ -42,14 +43,14 @@ export class GenerateCategoryCollectionService {
         )
 
         const prompt = !createdCollection
-          ? this.getAiPrompt(categoryCollection.title)
+          ? this.getAiPrompt(categoryCollection.title, parentName)
           : null
 
         const collectionData: GeneratedCollection = !createdCollection
           ? await this.aiService.generateResponse(prompt)
           : null
 
-        console.log('generated collection data -> ', collectionData.name)
+        console.log('generated collection data -> ', collectionData?.name)
 
         const collection = !createdCollection
           ? await this.createCollectionIfNotExists(
@@ -72,6 +73,7 @@ export class GenerateCategoryCollectionService {
             ctx,
             categoryCollection.children,
             collection.id,
+            categoryCollection.title,
           )
         }
       } else if (typeof categoryCollection === 'string') {
@@ -124,12 +126,13 @@ export class GenerateCategoryCollectionService {
     return collectionData as object
   }
 
-  private getAiPrompt(categoryName: string) {
+  private getAiPrompt(categoryName: string, parentName: string | null = null) {
     const prompt = `
   You are a seasoned content creator with expertise in industrial lubricants for B2B catalogs. Your task is to generate detailed and engaging content for a specific product category based on the provided category name.
   
   Category Name: "${categoryName}"
-  
+  Parent Category Name: "${parentName}"
+
   Instructions:
   
   1. name:
