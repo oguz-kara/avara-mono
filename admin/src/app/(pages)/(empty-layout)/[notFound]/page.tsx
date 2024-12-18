@@ -4,9 +4,9 @@ import { redirect } from 'next/navigation'
 export default async function Page({
   params,
 }: {
-  params: { notFound: string }
+  params: Promise<{ notFound: string }>
 }) {
-  const { notFound } = params
+  const { notFound } = await params
   const notFoundTranslations = ['sayfa-bulunamadi', 'page-not-found']
   const notFoundTranslation = notFoundTranslations.find(
     (translation) => translation === notFound
