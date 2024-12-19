@@ -13,6 +13,7 @@ import { FacetValueResolver } from './api/graphql/resolvers/facet-value.resolver
 import { GenerateCategoryCollectionService } from './application/services/generate-category-collection.service'
 import { GenerateFacetCollectionsResolver } from './api/graphql/resolvers/generate-facet-collections.resolver'
 import { AiModule } from '@av/ai'
+import { GenerateProductsWithCategoriesService } from './application/services/generate-products-with-categoeries.service'
 
 @Module({
   imports: [PrismaModule, RequestContextModule, AiModule],
@@ -28,6 +29,7 @@ import { AiModule } from '@av/ai'
     FacetValueResolver,
     GenerateCategoryCollectionService,
     GenerateFacetCollectionsResolver,
+    GenerateProductsWithCategoriesService,
   ],
   exports: [
     ProductService,
@@ -35,6 +37,7 @@ import { AiModule } from '@av/ai'
     FacetService,
     FacetValueService,
     GenerateCategoryCollectionService,
+    GenerateProductsWithCategoriesService,
   ],
 })
 export class ProductModule {}

@@ -159,11 +159,7 @@ const CollectionNode: React.FC<CollectionNodeProps> = ({
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Tooltip title="Koleksiyonu düzenle">
             <Link href={`/katalog/koleksiyonlar/${collection.id}`}>
-              <IconButton
-                edge="end"
-                aria-label="edit"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <IconButton edge="end" aria-label="edit" type="button">
                 <Edit />
               </IconButton>
             </Link>

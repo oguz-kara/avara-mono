@@ -1,10 +1,10 @@
 import { UseInterceptors } from '@nestjs/common'
-import { Resolver, Query, Args, ObjectType, Field } from '@nestjs/graphql'
+import { Resolver, Args, ObjectType, Field, Mutation } from '@nestjs/graphql'
 import { Ctx, RequestContext, RequestContextInterceptor } from '@av/common'
 import GraphQLJSON from 'graphql-type-json'
 
 import { GenerateCategoryCollectionService } from '@av/catalog/application/services/generate-category-collection.service'
-import { GeneratedCollection } from '../types/generated-collection'
+import { GenerateProductsWithCategoriesService } from '@av/catalog/application/services/generate-products-with-categoeries.service'
 
 @ObjectType()
 class FacetCollectionResponse {
@@ -17,9 +17,10 @@ class FacetCollectionResponse {
 export class GenerateFacetCollectionsResolver {
   constructor(
     private readonly generateCategoryCollectionService: GenerateCategoryCollectionService,
+    private readonly generateProductsWithCategoriesService: GenerateProductsWithCategoriesService,
   ) {}
 
-  @Query(() => FacetCollectionResponse)
+  @Mutation(() => FacetCollectionResponse)
   async generateFacetCollections(
     @Ctx() ctx: RequestContext,
     @Args('data', { type: () => GraphQLJSON }) data: any,
@@ -33,13 +34,14 @@ export class GenerateFacetCollectionsResolver {
     return { success: result }
   }
 
-  @Query(() => GeneratedCollection)
-  async getGeneratedCollection(
+  @Mutation(() => FacetCollectionResponse)
+  async generateProductsWithCategories(
     @Ctx() ctx: RequestContext,
-    @Args('title', { type: () => String }) title: string,
-  ): Promise<object> {
-    return this.generateCategoryCollectionService.generateSingleCollection(
-      title,
+    @Args('data', { type: () => GraphQLJSON }) data: any,
+  ): Promise<FacetCollectionResponse> {
+    return this.generateProductsWithCategoriesService.generateProductsWithCategories(
+      ctx,
+      data,
     )
   }
 }

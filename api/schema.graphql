@@ -352,13 +352,6 @@ type FindUsersResponseType {
   pagination: PaginatedResponseMeta!
 }
 
-type GeneratedCollection {
-  description: String!
-  name: String!
-  seoMetadata: SEOMetadata!
-  slug: String!
-}
-
 input IDInput {
   id: String!
 }
@@ -371,20 +364,6 @@ scalar JSON
 input LoginUserDto {
   email: String!
   password: String!
-}
-
-type Logo {
-  type: String!
-  url: String!
-}
-
-type MainEntity {
-  description: String!
-  image: String!
-  name: String!
-  publisher: Publisher!
-  type: String!
-  url: String!
 }
 
 type Mutation {
@@ -412,6 +391,8 @@ type Mutation {
   deleteSeoMetadata(id: String!): SeoMetadata!
   editParentCollection(id: String!, parentId: String): Collection!
   editPermissionDetails(id: String!, input: UpdatePermissionDto!): Permission!
+  generateFacetCollections(data: JSON!): FacetCollectionResponse!
+  generateProductsWithCategories(data: JSON!): FacetCollectionResponse!
   recoverPermissionById(input: IDInput!): Permission!
   removePermissionById(input: IDInput!): Permission!
   removeRoleById(id: String!): Role!
@@ -486,12 +467,6 @@ type Product {
   updatedBy: String
 }
 
-type Publisher {
-  logo: Logo!
-  name: String!
-  type: String!
-}
-
 type Query {
   activeUser: UserType
   channel(id: Int!): Channel!
@@ -507,8 +482,6 @@ type Query {
   findRoleById(id: String!): Role
   findUserByEmail(input: EmailInput!): UserType
   findUserById(input: IDInput!): UserType
-  generateFacetCollections(data: JSON!): FacetCollectionResponse!
-  getGeneratedCollection(title: String!): GeneratedCollection!
   getOrCreateDefaultChannel(token: String!): Channel!
   getUserAccessUI: [NavbarResponse!]!
   permissions(input: PaginationInput): FindPermissionsResponseType!
@@ -558,17 +531,6 @@ type Role {
 enum RuleType {
   FACET_VALUE_FILTER
   PRODUCT_NAME_FILTER
-}
-
-type SEOMetadata {
-  description: String!
-  keywords: String!
-  ogDescription: String!
-  ogTitle: String!
-
-  """Schema Markup"""
-  schemaMarkup: JSON
-  title: String!
 }
 
 """The type of scope"""
