@@ -58,4 +58,11 @@ export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
       sizes: {},
     },
   },
+  minio: {
+    endpoint: process.env.MINIO_ENDPOINT,
+    accessKey: process.env.MINIO_ACCESS_KEY,
+    secretKey: process.env.MINIO_SECRET_KEY,
+    bucketName: process.env.MINIO_BUCKET_NAME,
+    publicUrl: process.env.MINIO_PUBLIC_URL,
+  },
 })

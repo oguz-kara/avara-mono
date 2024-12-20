@@ -18,6 +18,7 @@ import { PaginationValidator, RequestContextModule } from '@av/common'
 import { PrismaService } from '@av/database'
 import { LocalFileSystemService } from './infrastructure/services/local-file-system.service'
 import { PathService } from './infrastructure/services/path.service'
+import { MinioStorageStrategy } from './infrastructure/services/minio-storage-strategy.service'
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { PathService } from './infrastructure/services/path.service'
     FileTypeService,
     ImageProcessor,
     LocalStorageStrategy,
+    MinioStorageStrategy,
     StorageStrategyFactory,
     FilenameNormalizer,
     PaginationValidator,
