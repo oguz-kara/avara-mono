@@ -90,6 +90,7 @@ export class MinioStorageStrategy implements AssetStorageStrategy {
         data: {
           ...asset,
           preview: previewUrl,
+          source: key,
           channelToken: ctx.channel.token,
         },
       })
@@ -124,6 +125,7 @@ export class MinioStorageStrategy implements AssetStorageStrategy {
         data: {
           ...asset,
           preview: previewUrl,
+          source: originalKey,
           channelToken: ctx.channel.token,
         },
       })
