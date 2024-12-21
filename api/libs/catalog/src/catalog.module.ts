@@ -14,9 +14,10 @@ import { GenerateCategoryCollectionService } from './application/services/genera
 import { GenerateFacetCollectionsResolver } from './api/graphql/resolvers/generate-facet-collections.resolver'
 import { AiModule } from '@av/ai'
 import { GenerateProductsWithCategoriesService } from './application/services/generate-products-with-categoeries.service'
+import { LocalizeModule } from '@av/localize'
 
 @Module({
-  imports: [PrismaModule, RequestContextModule, AiModule],
+  imports: [PrismaModule, RequestContextModule, AiModule, LocalizeModule],
   providers: [
     ProductService,
     ProductResolver,

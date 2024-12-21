@@ -96,6 +96,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/ai/tsconfig.lib.json"
       }
+    },
+    "localize": {
+      "type": "library",
+      "root": "libs/localize",
+      "entryFile": "index",
+      "sourceRoot": "libs/localize/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/localize/tsconfig.lib.json"
+      }
     }
   }
 }

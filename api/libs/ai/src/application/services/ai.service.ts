@@ -9,16 +9,18 @@ export class AIService {
   constructor(private chatGPTProvider: ChatGPTProvider) {
     this.providers = {
       chatgpt: this.chatGPTProvider,
-      // Future providers can be added here
     }
   }
 
-  async generateResponse(prompt: string): Promise<any> {
+  async generateResponse(
+    prompt: string,
+    options: { version?: string } = { version: 'gpt-3.5-turbo' },
+  ): Promise<any> {
     const provider = this.providers['chatgpt']
     if (!provider) {
       throw new Error(`AI provider chatgpt not supported.`)
     }
 
-    return JSON.parse(await provider.generateResponse(prompt))
+    return await provider.generateResponse(prompt, options.version)
   }
 }

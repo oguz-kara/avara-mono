@@ -77,6 +77,12 @@
       ],
       "@av/ai/*": [
         "libs/ai/src/*"
+      ],
+      "@av/localize": [
+        "libs/localize/src"
+      ],
+      "@av/localize/*": [
+        "libs/localize/src/*"
       ]
     }
   }

@@ -29,6 +29,9 @@ export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
       process.env.AUTHORIZATION_ENABLED === 'true' ? true : false,
   },
   localization: {
+    ai: {
+      version: process.env.AI_TRANSLATE_VERSION || 'gpt-3.5-turbo',
+    },
     language: {
       default: 'en',
       available: ['en', 'fr'],
@@ -64,5 +67,8 @@ export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
     secretKey: process.env.MINIO_SECRET_KEY,
     bucketName: process.env.MINIO_BUCKET_NAME,
     publicUrl: process.env.MINIO_PUBLIC_URL,
+  },
+  ai: {
+    version: process.env.AI_TRANSLATE_VERSION || 'gpt-3.5-turbo',
   },
 })

@@ -46,12 +46,11 @@ export class GenerateCategoryCollectionService {
 
   async generateSingleCollection(title: string): Promise<object> {
     const prompt = this.buildAiPrompt(title)
-    const collectionData: GeneratedCollection =
-      await this.aiService.generateResponse(prompt)
-
-    this.logger.debug(
-      `Generated collection data: ${JSON.stringify(collectionData, null, 2)}`,
+    const collectionData: GeneratedCollection = JSON.parse(
+      await this.aiService.generateResponse(prompt),
     )
+
+    this.logger.debug(`Generated collection data: ${collectionData}`)
     return collectionData as object
   }
 
@@ -89,7 +88,9 @@ export class GenerateCategoryCollectionService {
     let collection = existingCollection
     if (!existingCollection) {
       const prompt = this.buildAiPrompt(categoryName)
-      const collectionData = await this.aiService.generateResponse(prompt)
+      const collectionData = JSON.parse(
+        await this.aiService.generateResponse(prompt),
+      )
       this.logger.debug(
         `Generated collection data for "${categoryName}": ${collectionData?.name}`,
       )
@@ -133,7 +134,9 @@ export class GenerateCategoryCollectionService {
         categoryInput.title,
         parentId ? await this.getParentName(ctx, parentId) : null,
       )
-      const collectionData = await this.aiService.generateResponse(prompt)
+      const collectionData = JSON.parse(
+        await this.aiService.generateResponse(prompt),
+      )
       this.logger.debug(
         `Generated collection data for "${categoryInput.title}": ${collectionData?.name}`,
       )

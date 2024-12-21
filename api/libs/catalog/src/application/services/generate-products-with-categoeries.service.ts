@@ -149,8 +149,9 @@ export class GenerateProductsWithCategoriesService {
       ? await this.getCategoryNameById(ctx, parentId)
       : null
     const prompt = this.buildCategoryAiPrompt(categoryName, parentName)
-    const generatedCollection: GeneratedCollection =
-      await this.aiService.generateResponse(prompt)
+    const generatedCollection: GeneratedCollection = JSON.parse(
+      await this.aiService.generateResponse(prompt),
+    )
     this.logger.debug(
       `"${categoryName}" için oluşturulan koleksiyon verisi: ${generatedCollection.name}`,
     )
@@ -217,7 +218,9 @@ export class GenerateProductsWithCategoriesService {
     categoryName: string,
   ): Promise<any> {
     const prompt = this.buildProductAiPrompt(productName, categoryName)
-    const productData = await this.aiService.generateResponse(prompt)
+    const productData = JSON.parse(
+      await this.aiService.generateResponse(prompt),
+    )
     this.logger.debug(
       `Generated product data for "${productName}": ${JSON.stringify(productData, null, 2)}`,
     )

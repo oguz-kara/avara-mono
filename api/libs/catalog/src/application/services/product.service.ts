@@ -3,74 +3,52 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { PrismaService, Product, Prisma } from '@av/database'
+import {
+  PrismaService,
+  Product,
+  Prisma,
+  EntityType,
+  SeoMetadata,
+} from '@av/database'
+import { EntityType as GraphQLEntityType } from '@av/localize'
 import { PaginatedItemsResponse, RequestContext } from '@av/common'
 import { PaginationValidator } from '@av/common/utils/pagination.validator'
 import {
   CreateProductInput,
   UpdateProductInput,
 } from '../../api/graphql/types/product.types'
+import { TranslatableEntityEventEmitter } from '@av/localize/application/emitters/translatable-entity-event.emitter'
 
 @Injectable()
 export class ProductService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paginationValidator: PaginationValidator,
+    private readonly translatableEntityEventEmitter: TranslatableEntityEventEmitter,
   ) {}
 
   async create(
     ctx: RequestContext,
     data: CreateProductInput,
   ): Promise<Product> {
-    const {
-      facetValueIds,
-      documentIds,
-      seoMetadata,
-      featuredAssetId,
-      ...productData
-    } = data
-    const input: Prisma.ProductCreateInput = {
-      ...productData,
-      channelToken: ctx.channel.token,
+    const input = this.buildCreateProductInput(data, ctx)
+
+    if (data?.facetValueIds?.length > 0)
+      await this.verifyFacetValuesExist(data.facetValueIds)
+
+    const createdProduct = await this.prisma.product.create({ data: input })
+
+    this.emitProductCreatedEvents(createdProduct, ctx)
+
+    if (data?.seoMetadata) {
+      const createdSeoMetadata = await this.prisma.seoMetadata.findFirst({
+        where: { productId: createdProduct.id },
+      })
+
+      this.emitSeoMetadataCreatedEvent(createdSeoMetadata, ctx)
     }
 
-    if (featuredAssetId) {
-      input.featuredAsset = {
-        connect: { id: featuredAssetId },
-      }
-    }
-
-    if (seoMetadata) {
-      input.seoMetadata = {
-        create: {
-          ...seoMetadata,
-          channelToken: ctx.channel.token,
-        },
-      }
-    }
-
-    if (facetValueIds) {
-      input.facetValues = {
-        connect: facetValueIds.map((id) => ({ id })),
-      }
-    }
-
-    if (documentIds) {
-      input.documents = {
-        connect: documentIds.map((id) => ({ id })),
-      }
-    }
-
-    if (facetValueIds && facetValueIds.length > 0)
-      await this.verifyFacetValuesExist(facetValueIds)
-
-    return this.prisma.product.create({
-      data: {
-        ...input,
-        createdBy: ctx.user?.id || 'system',
-        channelToken: ctx.channel.token,
-      },
-    })
+    return createdProduct
   }
 
   async getById(
@@ -136,6 +114,7 @@ export class ProductService {
     }
   }
 
+  // ..
   async update(
     ctx: RequestContext,
     id: string,
@@ -144,55 +123,34 @@ export class ProductService {
   ): Promise<Product> {
     await this.getById(ctx, id, relations)
 
-    const {
-      facetValueIds,
-      documentIds,
-      seoMetadata,
-      featuredAssetId,
-      ...productData
-    } = data
+    const { facetValueIds, seoMetadata } = data
 
-    const input: Prisma.ProductUpdateInput = {
-      ...productData,
-      channelToken: ctx.channel.token,
-    }
+    if (facetValueIds) await this.verifyFacetValuesExist(facetValueIds)
 
-    if (featuredAssetId) {
-      input.featuredAsset = {
-        connect: { id: featuredAssetId },
-      }
-    }
+    const input = this.buildUpdateProductInput(data, ctx)
 
-    if (facetValueIds) {
-      await this.verifyFacetValuesExist(facetValueIds)
+    const hasSeoMetadata = await this.prisma.seoMetadata.findFirst({
+      where: { productId: id, channelToken: ctx.channel.token },
+    })
 
-      input.facetValues = {
-        set: facetValueIds.map((id) => ({ id })),
-      }
-    }
-
-    if (documentIds)
-      input.documents = {
-        set: documentIds.map((id) => ({ id })),
-      }
-
-    if (seoMetadata)
-      input.seoMetadata = {
-        update: {
-          ...seoMetadata,
-        },
-      }
-
-    return this.prisma.product.update({
+    const updatedProduct = await this.prisma.product.update({
       where: { id },
-      data: {
-        ...input,
-        updatedBy: ctx.user?.id || 'system',
-      },
+      data: input,
       include: relations ?? undefined,
     })
+
+    this.emitProductUpdatedEvents(updatedProduct, ctx)
+
+    if (seoMetadata && !hasSeoMetadata) {
+      this.emitSeoMetadataCreatedEvent(seoMetadata as SeoMetadata, ctx)
+    } else if (seoMetadata && hasSeoMetadata) {
+      this.emitSeoMetadataUpdatedEvent(seoMetadata as SeoMetadata, ctx)
+    }
+
+    return updatedProduct
   }
 
+  // ..
   async delete(
     ctx: RequestContext,
     id: string,
@@ -205,6 +163,7 @@ export class ProductService {
     })
   }
 
+  // ..
   async deleteMany(
     ctx: RequestContext,
     ids: string[],
@@ -219,7 +178,7 @@ export class ProductService {
       throw new NotFoundException(`Products not found: ${ids.join(', ')}`)
 
     return this.prisma.product.deleteMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, channelToken: ctx.channel.token },
     })
   }
 
@@ -336,5 +295,165 @@ export class ProductService {
         'SOME_FACET_VALUES_DO_NOT_EXIST',
       )
     }
+  }
+
+  private emitSeoMetadataCreatedEvent(
+    seoMetadata: SeoMetadata,
+    ctx: RequestContext,
+  ) {
+    const translatableSeoMetadataFields = {
+      name: seoMetadata?.name,
+      path: seoMetadata?.path,
+      title: seoMetadata?.title,
+      description: seoMetadata?.description,
+      keywords: seoMetadata?.keywords,
+      ogTitle: seoMetadata?.ogTitle,
+      ogDescription: seoMetadata?.ogDescription,
+      alternates: seoMetadata?.alternates,
+      canonicalUrl: seoMetadata?.canonicalUrl,
+    }
+
+    if (seoMetadata) {
+      this.translatableEntityEventEmitter.emitCreatedEvent(
+        seoMetadata.id,
+        EntityType.SEO_METADATA as GraphQLEntityType,
+        translatableSeoMetadataFields,
+        ctx,
+      )
+    }
+  }
+
+  private emitProductCreatedEvents(product: Product, ctx: RequestContext) {
+    const translatableProductFields = {
+      name: product.name,
+      description: product.description,
+      slug: product.slug,
+    }
+
+    this.translatableEntityEventEmitter.emitCreatedEvent(
+      product.id,
+      EntityType.PRODUCT as GraphQLEntityType,
+      translatableProductFields,
+      ctx,
+    )
+  }
+
+  private emitProductUpdatedEvents(product: Product, ctx: RequestContext) {
+    const translatableProductFields = {
+      name: product.name || undefined,
+      description: product.description || undefined,
+      slug: product.slug || undefined,
+    }
+
+    this.translatableEntityEventEmitter.emitUpdatedEvent(
+      product.id,
+      EntityType.PRODUCT as GraphQLEntityType,
+      translatableProductFields,
+      ctx,
+    )
+  }
+
+  private emitSeoMetadataUpdatedEvent(
+    seoMetadata: SeoMetadata,
+    ctx: RequestContext,
+  ) {
+    const translatableSeoMetadataFields = {
+      name: seoMetadata?.name || undefined,
+      path: seoMetadata?.path || undefined,
+      title: seoMetadata?.title || undefined,
+      description: seoMetadata?.description || undefined,
+      keywords: seoMetadata?.keywords || undefined,
+      ogTitle: seoMetadata?.ogTitle || undefined,
+      ogDescription: seoMetadata?.ogDescription || undefined,
+      alternates: seoMetadata?.alternates || undefined,
+      canonicalUrl: seoMetadata?.canonicalUrl || undefined,
+    }
+
+    this.translatableEntityEventEmitter.emitUpdatedEvent(
+      seoMetadata.id,
+      EntityType.SEO_METADATA as GraphQLEntityType,
+      translatableSeoMetadataFields,
+      ctx,
+    )
+  }
+
+  private buildCreateProductInput(
+    product: CreateProductInput,
+    ctx: RequestContext,
+  ): Prisma.ProductCreateInput {
+    const {
+      facetValueIds = [],
+      documentIds = [],
+      seoMetadata,
+      featuredAssetId,
+      ...productData
+    } = product
+
+    return {
+      ...productData,
+      channelToken: ctx.channel.token,
+      createdBy: ctx.user?.id || 'system',
+      ...(featuredAssetId && {
+        featuredAsset: { connect: { id: featuredAssetId } },
+      }),
+      ...(seoMetadata && {
+        seoMetadata: {
+          create: {
+            ...seoMetadata,
+            channelToken: ctx.channel.token,
+          },
+        },
+      }),
+      ...(facetValueIds.length > 0 && {
+        facetValues: { connect: facetValueIds.map((id) => ({ id })) },
+      }),
+      ...(documentIds.length > 0 && {
+        documents: { connect: documentIds.map((id) => ({ id })) },
+      }),
+    }
+  }
+
+  private buildUpdateProductInput(
+    product: UpdateProductInput,
+    ctx: RequestContext,
+  ): Prisma.ProductUpdateInput {
+    const {
+      facetValueIds,
+      documentIds,
+      seoMetadata,
+      featuredAssetId,
+      ...productData
+    } = product
+
+    const input: Prisma.ProductUpdateInput = {
+      ...productData,
+      channelToken: ctx.channel.token,
+    }
+
+    if (featuredAssetId) {
+      input.featuredAsset = {
+        connect: { id: featuredAssetId },
+      }
+    }
+
+    if (facetValueIds) {
+      input.facetValues = {
+        set: facetValueIds.map((id) => ({ id })),
+      }
+    }
+
+    if (documentIds)
+      input.documents = {
+        set: documentIds.map((id) => ({ id })),
+      }
+
+    if (seoMetadata)
+      input.seoMetadata = {
+        update: {
+          ...seoMetadata,
+        },
+      }
+
+    return input
   }
 }

@@ -1,5 +1,11 @@
 import { NotFoundException, Injectable } from '@nestjs/common'
-import { PrismaService, Channel, Prisma, ChannelType } from '@av/database'
+import {
+  PrismaService,
+  Channel,
+  Prisma,
+  ChannelType,
+  ChannelSettings,
+} from '@av/database'
 import { RequestContext } from '@av/common'
 import { generateChannelToken } from '@av/common'
 
@@ -34,6 +40,22 @@ export class ChannelService {
     if (!channel) {
       throw new NotFoundException(`Channel with ID ${id} does not exist.`)
     }
+    return channel
+  }
+
+  async getChannelByToken(
+    ctx: RequestContext,
+    token: string,
+    relations: Prisma.ChannelInclude = {},
+  ): Promise<Channel & { channelSettings: ChannelSettings }> {
+    const channel = await this.prisma.channel.findUnique({
+      where: { token },
+      include: relations || undefined,
+    })
+    if (!channel) {
+      throw new NotFoundException(`Channel with token ${token} does not exist.`)
+    }
+
     return channel
   }
 

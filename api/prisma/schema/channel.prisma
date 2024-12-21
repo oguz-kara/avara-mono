@@ -12,6 +12,16 @@ enum ChannelStatus {
     MAINTENANCE
 }
 
+enum AutoTranslateModel {
+    GOOGLE
+    GPT_3_5_TURBO
+    GPT_4
+    GPT_4_O
+    GPT_4_O_MINI
+    GPT_O1
+    GPT_O1_MINI
+}
+
 model Channel {
     id                  Int           @id @default(autoincrement())
     name                String
@@ -23,13 +33,27 @@ model Channel {
     status              ChannelStatus @default(ACTIVE)
     type                ChannelType   @default(OTHER)
 
-    deletedAt DateTime?
-    deletedBy String?
-    createdBy String
-    updatedBy String?
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+    deletedAt       DateTime?
+    deletedBy       String?
+    createdBy       String
+    updatedBy       String?
+    createdAt       DateTime         @default(now())
+    updatedAt       DateTime         @updatedAt
+    channelSettings ChannelSettings?
 
     @@index([token])
     @@index([code])
+}
+
+model ChannelSettings {
+    id        Int @id @default(autoincrement())
+    channelId Int @unique
+
+    autoTranslate      Boolean @default(false)
+    autoTranslateModel AutoTranslateModel @default(GPT_3_5_TURBO)
+
+    channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }

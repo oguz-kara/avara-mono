@@ -8,6 +8,7 @@ import {
 } from '@aws-sdk/client-s3'
 import {
   Asset,
+  AssetType,
   DbTransactionalClient,
   ImageVariant,
   PrismaService,
@@ -17,7 +18,6 @@ import { ImageProcessor } from '../../domain/services/image-processor.service'
 import { UnsupportedFileError } from '../../domain/errors/unsupported-file-error'
 import { DefaultScreenSizeItem } from '../../domain/types/default-screen-size-item.type'
 import { defaultScreenSizes } from 'config/default-screen-sizes.config'
-import { FilenameNormalizer } from '@av/asset/domain'
 import { RequestContext } from '@av/common'
 
 @Injectable()
@@ -30,7 +30,6 @@ export class MinioStorageStrategy implements AssetStorageStrategy {
     private readonly configService: ConfigService,
     private readonly imageProcessor: ImageProcessor,
     private readonly prisma: PrismaService,
-    private readonly filenameNormalizer: FilenameNormalizer,
   ) {
     this.s3 = new S3Client({
       endpoint: this.configService.get<string>('minio.endpoint'), // MinIO URL
@@ -52,29 +51,6 @@ export class MinioStorageStrategy implements AssetStorageStrategy {
     }
   }
 
-  private async uploadToMinio(
-    key: string,
-    file: Buffer,
-    mimeType: string,
-  ): Promise<string> {
-    const command = new PutObjectCommand({
-      Bucket: this.bucketName,
-      Key: key,
-      Body: file,
-      ContentType: mimeType,
-    })
-    await this.s3.send(command)
-    return `${this.configService.get<string>('minio.publicUrl')}/${key}`
-  }
-
-  private async deleteFromMinio(key: string): Promise<void> {
-    const command = new DeleteObjectCommand({
-      Bucket: this.bucketName,
-      Key: key,
-    })
-    await this.s3.send(command)
-  }
-
   async save(
     ctx: RequestContext,
     asset: Asset,
@@ -83,7 +59,8 @@ export class MinioStorageStrategy implements AssetStorageStrategy {
   ): Promise<Asset> {
     const dbClient = options?.tx || this.prisma
     try {
-      const key = `original/${asset.name}`
+      const key = this.getKeyByAssetType(asset.type, asset.name)
+
       const previewUrl = await this.uploadToMinio(key, file, asset.mimeType)
 
       return await dbClient.asset.create({
@@ -204,5 +181,41 @@ export class MinioStorageStrategy implements AssetStorageStrategy {
     await this.prisma.asset.deleteMany()
 
     // Optional: Implement logic to delete all objects in the MinIO bucket
+  }
+
+  private getKeyByAssetType(type: AssetType, name: string): string {
+    switch (type) {
+      case 'IMAGE':
+        return `original/${name}`
+      case 'DOCUMENT':
+        return `documents/${name}`
+      case 'VIDEO':
+        return `videos/${name}`
+      case 'AUDIO':
+        return `audios/${name}`
+    }
+  }
+
+  private async deleteFromMinio(key: string): Promise<void> {
+    const command = new DeleteObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    })
+    await this.s3.send(command)
+  }
+
+  private async uploadToMinio(
+    key: string,
+    file: Buffer,
+    mimeType: string,
+  ): Promise<string> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+      Body: file,
+      ContentType: mimeType,
+    })
+    await this.s3.send(command)
+    return `${this.configService.get<string>('minio.publicUrl')}/${key}`
   }
 }
