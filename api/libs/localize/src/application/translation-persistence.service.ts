@@ -5,6 +5,16 @@ import { EntityType, PrismaService, Translation } from '@av/database'
 
 import { UpsertTranslationInput } from '../api/graphql/dto'
 
+interface DeleteTranslationsInput {
+  entityType: EntityType
+  entityIds: string[]
+}
+
+interface DeleteTranslationInput {
+  entityType: EntityType
+  entityId: string
+}
+
 @Injectable()
 export class TranslationPersistenceService {
   constructor(private readonly prisma: PrismaService) {}
@@ -78,6 +88,33 @@ export class TranslationPersistenceService {
     const translations = await Promise.all(operations)
 
     return { fields: this.parseToObject(translations) }
+  }
+
+  async deleteTranslations(
+    ctx: RequestContext,
+    input: DeleteTranslationsInput,
+  ) {
+    const translations = await this.prisma.translation.deleteMany({
+      where: {
+        entityType: input.entityType,
+        entityId: { in: input.entityIds },
+        channel_token: ctx.channel.token,
+      },
+    })
+
+    return translations
+  }
+
+  async deleteTranslation(ctx: RequestContext, input: DeleteTranslationInput) {
+    const translations = await this.prisma.translation.deleteMany({
+      where: {
+        entityType: input.entityType,
+        entityId: input.entityId,
+        channel_token: ctx.channel.token,
+      },
+    })
+
+    return translations
   }
 
   private parseToObject(translations: Translation[]) {

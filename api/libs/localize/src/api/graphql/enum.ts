@@ -1,6 +1,6 @@
 import { registerEnumType } from '@nestjs/graphql'
 
-export enum EntityType {
+export enum GqlEntityType {
   PRODUCT = 'PRODUCT',
   COLLECTION = 'COLLECTION',
   FACET = 'FACET',
@@ -8,6 +8,6 @@ export enum EntityType {
   SEO_METADATA = 'SEO_METADATA',
 }
 
-registerEnumType(EntityType, {
+registerEnumType(GqlEntityType, {
   name: 'EntityType',
 })

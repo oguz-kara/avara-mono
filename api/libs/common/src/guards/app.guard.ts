@@ -165,6 +165,12 @@ export class AppGuard implements CanActivate {
       code: channel.code,
       defaultLanguageCode: channel.defaultLanguageCode,
       currencyCode: channel.currencyCode,
+      settings: {
+        baseUrl: channel.settings.baseUrl,
+        autoTranslate: channel.settings.autoTranslate,
+        dynamicSegments: channel.settings.dynamicSegments,
+        brandName: channel.settings.brandName,
+      },
     }
 
     request.channel = channelData

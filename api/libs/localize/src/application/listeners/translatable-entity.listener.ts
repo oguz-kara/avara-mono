@@ -1,11 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-import { EVENT_LIST, TranslateableEntityCreatedEvent } from '@av/common'
+import {
+  EVENT_LIST,
+  TranslateableEntityCreatedEvent,
+  TranslateableEntityDeletedEvent,
+  TranslateableEntityDeletedMultipleEvent,
+  TranslateableEntityUpdatedEvent,
+} from '@av/common'
 import { TranslateAIService } from '../translate-ai.service'
 import { PrismaService } from '@av/database'
 import { TranslationPersistenceService } from '../translation-persistence.service'
 import { ChannelService } from '@av/channel'
-import { TranslateableEntityUpdatedEvent } from '@av/common/events/translateable-entity.updated.event'
 
 @Injectable()
 export class TranslatableEntityListener {
@@ -101,14 +106,42 @@ export class TranslatableEntityListener {
     return translations
   }
 
+  @OnEvent(EVENT_LIST.TRANSLATEABLE_ENTITY_UPDATED)
   async handleTranslateableEntityUpdatedEvent(
     event: TranslateableEntityUpdatedEvent,
   ) {
     const { entityId, entityType, fields, ctx } = event
 
+    if (!entityId) {
+      this.logger.debug(`Entity ID is required for translation`, {
+        channel: ctx.channel.token,
+        entityType,
+        entityId,
+      })
+      return
+    }
+
+    if (!entityType) {
+      this.logger.debug(`Entity type is required for translation`, {
+        channel: ctx.channel.token,
+        entityType,
+        entityId,
+      })
+      return
+    }
+
     const fieldsToTranslate = Object.entries(fields)
       .filter((entry) => Boolean(entry[1]))
       .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {})
+
+    if (Object.keys(fieldsToTranslate).length === 0) {
+      this.logger.debug(`No fields to translate for entity ${entityId}`, {
+        channel: ctx.channel.token,
+        entityType,
+        entityId,
+      })
+      return
+    }
 
     const channel = await this.channelService.getChannelByToken(
       ctx,
@@ -126,15 +159,6 @@ export class TranslatableEntityListener {
       )
 
       this.logger.debug(`Aborting listener...`, {
-        channel: channel.token,
-        entityType,
-        entityId,
-      })
-      return
-    }
-
-    if (Object.keys(fieldsToTranslate).length === 0) {
-      this.logger.debug(`No fields to translate for entity ${entityId}`, {
         channel: channel.token,
         entityType,
         entityId,
@@ -181,5 +205,75 @@ export class TranslatableEntityListener {
     )
 
     return translations
+  }
+
+  @OnEvent(EVENT_LIST.TRANSLATEABLE_ENTITY_DELETED_MULTIPLE)
+  async handleTranslateableEntityDeletedMultipleEvent(
+    event: TranslateableEntityDeletedMultipleEvent,
+  ) {
+    const { entityIds, entityType, ctx } = event
+
+    if (!entityIds || !entityType) {
+      this.logger.debug(
+        `Entity ID and type are required for translation deletion`,
+        {
+          channel: ctx.channel.token,
+          entityType,
+          entityIds,
+        },
+      )
+      return
+    }
+
+    this.logger.debug(
+      `Deleting translations for entity ${entityType} with IDs ${entityIds}`,
+      {
+        channel: ctx.channel.token,
+        entityType,
+        entityIds,
+      },
+    )
+
+    const translations =
+      await this.translationPersistenceService.deleteTranslations(ctx, {
+        entityType: entityType,
+        entityIds: entityIds,
+      })
+
+    this.logger.debug(`Deleted translations`, {
+      channel: ctx.channel.token,
+      entityType,
+      entityIds,
+      translations,
+    })
+  }
+
+  @OnEvent(EVENT_LIST.TRANSLATEABLE_ENTITY_DELETED)
+  async handleTranslateableEntityDeletedEvent(
+    event: TranslateableEntityDeletedEvent,
+  ) {
+    const { entityId, entityType, ctx } = event
+
+    this.logger.debug(
+      `Deleting translations for entity ${entityType} with ID ${entityId}`,
+      {
+        channel: ctx.channel.token,
+        entityType,
+        entityId,
+      },
+    )
+
+    const translations =
+      await this.translationPersistenceService.deleteTranslation(ctx, {
+        entityType: entityType,
+        entityId: entityId,
+      })
+
+    this.logger.debug(`Deleted translations`, {
+      channel: ctx.channel.token,
+      entityType,
+      entityId,
+      translations,
+    })
   }
 }

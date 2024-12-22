@@ -6,9 +6,17 @@ import { PaginationValidator, RequestContextModule } from '@av/common'
 import { CommonModule } from '@av/common/common.module'
 import { SitemapService } from './application/sitemap.service'
 import { SitemapResolver } from './api/resolvers/sitemap.resolver'
+import { EventEmitterModule } from '@nestjs/event-emitter'
+import { LocalizeModule } from '@av/localize'
 
 @Module({
-  imports: [PrismaModule, RequestContextModule, CommonModule],
+  imports: [
+    PrismaModule,
+    RequestContextModule,
+    CommonModule,
+    EventEmitterModule.forRoot(),
+    LocalizeModule,
+  ],
   providers: [
     SeoMetadataResolver,
     SeoMetadataService,

@@ -4,7 +4,7 @@ import { UseInterceptors } from '@nestjs/common'
 import { TranslationResponse, TranslationResponseArray } from './types'
 import { UpsertTranslationInput } from './dto'
 import { TranslationPersistenceService } from '../../application/translation-persistence.service'
-import { EntityType as GraphQLEntityType } from '@av/localize'
+import { GqlEntityType as GraphQLEntityType } from '@av/localize'
 
 @Resolver(() => TranslationResponse)
 @UseInterceptors(RequestContextInterceptor)

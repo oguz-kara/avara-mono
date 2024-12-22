@@ -34,4 +34,21 @@ model SeoMetadata {
     updatedBy String?
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
+
+    @@unique([name, channelToken])
+    @@unique([path, channelToken])
+}
+
+model DynamicSegment {
+    id String @id @default(uuid())
+
+    name         String
+    channelToken String
+    langCode     String
+    segment      String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([name, segment, channelToken])
 }

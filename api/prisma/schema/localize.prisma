@@ -4,6 +4,7 @@ enum EntityType {
     FACET
     FACET_VALUE
     SEO_METADATA
+    SEGMENT
 }
 
 model Translation {

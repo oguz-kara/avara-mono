@@ -3,21 +3,35 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+
+import { PrismaService, Product, Prisma, EntityType } from '@av/database'
 import {
-  PrismaService,
-  Product,
-  Prisma,
-  EntityType,
-  SeoMetadata,
-} from '@av/database'
-import { EntityType as GraphQLEntityType } from '@av/localize'
-import { PaginatedItemsResponse, RequestContext } from '@av/common'
-import { PaginationValidator } from '@av/common/utils/pagination.validator'
+  GqlEntityType as GraphQLEntityType,
+  TranslatableEntityEventEmitter,
+} from '@av/localize'
+import {
+  PaginatedItemsResponse,
+  RequestContext,
+  PaginationValidator,
+  EVENT_LIST,
+} from '@av/common'
+import {
+  SeoMetadataService,
+  CreateSeoMetadataInput,
+  UpdateSeoMetadataInput,
+} from '@av/seo'
+
 import {
   CreateProductInput,
   UpdateProductInput,
 } from '../../api/graphql/types/product.types'
-import { TranslatableEntityEventEmitter } from '@av/localize/application/emitters/translatable-entity-event.emitter'
+import { EventEmitter2 } from '@nestjs/event-emitter'
+import {
+  ProductCreatedEvent,
+  ProductDeletedEvent,
+  ProductDeletedMultipleEvent,
+  ProductUpdatedEvent,
+} from '../events/product.events'
 
 @Injectable()
 export class ProductService {
@@ -25,27 +39,25 @@ export class ProductService {
     private readonly prisma: PrismaService,
     private readonly paginationValidator: PaginationValidator,
     private readonly translatableEntityEventEmitter: TranslatableEntityEventEmitter,
+    private readonly seoMetadataService: SeoMetadataService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(
     ctx: RequestContext,
     data: CreateProductInput,
   ): Promise<Product> {
-    const input = this.buildCreateProductInput(data, ctx)
+    const { seoMetadata, ...productData } = data
+    const input = this.buildCreateProductInput(productData, ctx)
 
     if (data?.facetValueIds?.length > 0)
       await this.verifyFacetValuesExist(data.facetValueIds)
 
     const createdProduct = await this.prisma.product.create({ data: input })
 
-    this.emitProductCreatedEvents(createdProduct, ctx)
-
-    if (data?.seoMetadata) {
-      const createdSeoMetadata = await this.prisma.seoMetadata.findFirst({
-        where: { productId: createdProduct.id },
-      })
-
-      this.emitSeoMetadataCreatedEvent(createdSeoMetadata, ctx)
+    if (createdProduct) {
+      await this.handleSeoMetadataCreate(ctx, seoMetadata)
+      this.emitProductCreatedEvents(createdProduct, ctx)
     }
 
     return createdProduct
@@ -114,7 +126,6 @@ export class ProductService {
     }
   }
 
-  // ..
   async update(
     ctx: RequestContext,
     id: string,
@@ -123,34 +134,36 @@ export class ProductService {
   ): Promise<Product> {
     await this.getById(ctx, id, relations)
 
-    const { facetValueIds, seoMetadata } = data
+    const { seoMetadata, ...productData } = data
+
+    const { facetValueIds, name, slug, description } = productData
 
     if (facetValueIds) await this.verifyFacetValuesExist(facetValueIds)
 
-    const input = this.buildUpdateProductInput(data, ctx)
-
-    const hasSeoMetadata = await this.prisma.seoMetadata.findFirst({
-      where: { productId: id, channelToken: ctx.channel.token },
-    })
+    const input = this.buildUpdateProductInput(productData, ctx)
 
     const updatedProduct = await this.prisma.product.update({
       where: { id },
       data: input,
-      include: relations ?? undefined,
+      include: { ...relations, seoMetadata: true } ?? { seoMetadata: true },
     })
 
-    this.emitProductUpdatedEvents(updatedProduct, ctx)
+    const seoMetadataId = updatedProduct.seoMetadata?.id
 
-    if (seoMetadata && !hasSeoMetadata) {
-      this.emitSeoMetadataCreatedEvent(seoMetadata as SeoMetadata, ctx)
-    } else if (seoMetadata && hasSeoMetadata) {
-      this.emitSeoMetadataUpdatedEvent(seoMetadata as SeoMetadata, ctx)
-    }
+    if (name || slug || description)
+      this.emitProductUpdatedTranslationEvent(updatedProduct, ctx)
+
+    if (seoMetadata)
+      await this.handleSeoMetadataUpdate(ctx, seoMetadataId, seoMetadata)
+
+    this.eventEmitter.emit(
+      EVENT_LIST.PRODUCT_UPDATED,
+      new ProductUpdatedEvent(ctx, updatedProduct),
+    )
 
     return updatedProduct
   }
 
-  // ..
   async delete(
     ctx: RequestContext,
     id: string,
@@ -158,28 +171,70 @@ export class ProductService {
   ): Promise<Product> {
     await this.getById(ctx, id, relations)
 
-    return this.prisma.product.delete({
+    const deletedProduct = await this.prisma.product.delete({
       where: { id },
+      include: { seoMetadata: true },
     })
+
+    if (deletedProduct) {
+      this.translatableEntityEventEmitter.emitDeletedEvent(
+        deletedProduct.id,
+        EntityType.PRODUCT as GraphQLEntityType,
+        ctx,
+      )
+
+      if (deletedProduct.seoMetadata)
+        this.translatableEntityEventEmitter.emitDeletedEvent(
+          deletedProduct.seoMetadata?.id,
+          EntityType.SEO_METADATA as GraphQLEntityType,
+          ctx,
+        )
+
+      this.eventEmitter.emit(
+        EVENT_LIST.PRODUCT_DELETED,
+        new ProductDeletedEvent(ctx, deletedProduct),
+      )
+    }
+
+    return deletedProduct
   }
 
-  // ..
   async deleteMany(
     ctx: RequestContext,
     ids: string[],
     relations?: Record<string, boolean | object>,
   ): Promise<Prisma.BatchPayload> {
     const products = await this.prisma.product.findMany({
-      where: { id: { in: ids } },
-      include: relations ?? undefined,
+      where: { id: { in: ids }, channelToken: ctx.channel.token },
+      include: { seoMetadata: true, ...relations },
     })
 
     if (products.length !== ids.length)
       throw new NotFoundException(`Products not found: ${ids.join(', ')}`)
 
-    return this.prisma.product.deleteMany({
+    const deletedProducts = await this.prisma.product.deleteMany({
       where: { id: { in: ids }, channelToken: ctx.channel.token },
     })
+
+    // emit events to remove translations for products and seo metadata
+    this.translatableEntityEventEmitter.emitDeletedMultipleEvent(
+      ids,
+      EntityType.PRODUCT as GraphQLEntityType,
+      ctx,
+    )
+
+    this.translatableEntityEventEmitter.emitDeletedMultipleEvent(
+      products.map((product) => product.seoMetadata?.id),
+      EntityType.SEO_METADATA as GraphQLEntityType,
+      ctx,
+    )
+
+    this.eventEmitter.emit(
+      EVENT_LIST.PRODUCT_DELETED_MULTIPLE,
+      new ProductDeletedMultipleEvent(ctx, products),
+    )
+
+    return deletedProducts
   }
 
   async markAsDeleted(
@@ -297,35 +352,13 @@ export class ProductService {
     }
   }
 
-  private emitSeoMetadataCreatedEvent(
-    seoMetadata: SeoMetadata,
-    ctx: RequestContext,
-  ) {
-    const translatableSeoMetadataFields = {
-      name: seoMetadata?.name,
-      path: seoMetadata?.path,
-      title: seoMetadata?.title,
-      description: seoMetadata?.description,
-      keywords: seoMetadata?.keywords,
-      ogTitle: seoMetadata?.ogTitle,
-      ogDescription: seoMetadata?.ogDescription,
-      alternates: seoMetadata?.alternates,
-      canonicalUrl: seoMetadata?.canonicalUrl,
-    }
-
-    if (seoMetadata) {
-      this.translatableEntityEventEmitter.emitCreatedEvent(
-        seoMetadata.id,
-        EntityType.SEO_METADATA as GraphQLEntityType,
-        translatableSeoMetadataFields,
-        ctx,
-      )
-    }
-  }
-
   private emitProductCreatedEvents(product: Product, ctx: RequestContext) {
+    this.eventEmitter.emit(
+      EVENT_LIST.PRODUCT_CREATED,
+      new ProductCreatedEvent(ctx, product),
+    )
+
     const translatableProductFields = {
-      name: product.name,
       description: product.description,
       slug: product.slug,
     }
@@ -338,11 +371,13 @@ export class ProductService {
     )
   }
 
-  private emitProductUpdatedEvents(product: Product, ctx: RequestContext) {
+  private emitProductUpdatedTranslationEvent(
+    product: Product,
+    ctx: RequestContext,
+  ) {
     const translatableProductFields = {
-      name: product.name || undefined,
-      description: product.description || undefined,
-      slug: product.slug || undefined,
+      description: product.description || '',
+      slug: product.slug || '',
     }
 
     this.translatableEntityEventEmitter.emitUpdatedEvent(
@@ -353,38 +388,13 @@ export class ProductService {
     )
   }
 
-  private emitSeoMetadataUpdatedEvent(
-    seoMetadata: SeoMetadata,
-    ctx: RequestContext,
-  ) {
-    const translatableSeoMetadataFields = {
-      name: seoMetadata?.name || undefined,
-      path: seoMetadata?.path || undefined,
-      title: seoMetadata?.title || undefined,
-      description: seoMetadata?.description || undefined,
-      keywords: seoMetadata?.keywords || undefined,
-      ogTitle: seoMetadata?.ogTitle || undefined,
-      ogDescription: seoMetadata?.ogDescription || undefined,
-      alternates: seoMetadata?.alternates || undefined,
-      canonicalUrl: seoMetadata?.canonicalUrl || undefined,
-    }
-
-    this.translatableEntityEventEmitter.emitUpdatedEvent(
-      seoMetadata.id,
-      EntityType.SEO_METADATA as GraphQLEntityType,
-      translatableSeoMetadataFields,
-      ctx,
-    )
-  }
-
   private buildCreateProductInput(
-    product: CreateProductInput,
+    product: Omit<CreateProductInput, 'seoMetadata'>,
     ctx: RequestContext,
   ): Prisma.ProductCreateInput {
     const {
       facetValueIds = [],
       documentIds = [],
-      seoMetadata,
       featuredAssetId,
       ...productData
     } = product
@@ -396,14 +406,6 @@ export class ProductService {
       ...(featuredAssetId && {
         featuredAsset: { connect: { id: featuredAssetId } },
       }),
-      ...(seoMetadata && {
-        seoMetadata: {
-          create: {
-            ...seoMetadata,
-            channelToken: ctx.channel.token,
-          },
-        },
-      }),
       ...(facetValueIds.length > 0 && {
         facetValues: { connect: facetValueIds.map((id) => ({ id })) },
       }),
@@ -414,16 +416,11 @@ export class ProductService {
   }
 
   private buildUpdateProductInput(
-    product: UpdateProductInput,
+    product: Omit<UpdateProductInput, 'seoMetadata'>,
     ctx: RequestContext,
   ): Prisma.ProductUpdateInput {
-    const {
-      facetValueIds,
-      documentIds,
-      seoMetadata,
-      featuredAssetId,
-      ...productData
-    } = product
+    const { facetValueIds, documentIds, featuredAssetId, ...productData } =
+      product
 
     const input: Prisma.ProductUpdateInput = {
       ...productData,
@@ -447,13 +444,68 @@ export class ProductService {
         set: documentIds.map((id) => ({ id })),
       }
 
-    if (seoMetadata)
-      input.seoMetadata = {
-        update: {
-          ...seoMetadata,
-        },
-      }
-
     return input
+  }
+
+  private async handleSeoMetadataCreate(
+    ctx: RequestContext,
+    seoMetadata: CreateSeoMetadataInput,
+  ) {
+    const staticSeoMetadata: CreateSeoMetadataInput = {
+      name: seoMetadata.name || '',
+      path: seoMetadata.path || '',
+      title: seoMetadata.title || '',
+      description: seoMetadata.description || '',
+      keywords: seoMetadata.keywords || '',
+      ogTitle: seoMetadata.ogTitle || '',
+      ogDescription: seoMetadata.ogDescription || '',
+      ogImage: seoMetadata.ogImage || '',
+      schemaMarkup: seoMetadata.schemaMarkup || '',
+      alternates: seoMetadata.alternates || '',
+      canonicalUrl: seoMetadata.canonicalUrl || '',
+      changefreq: seoMetadata.changefreq || 'daily',
+      hreflang: seoMetadata.hreflang || ctx.channel.defaultLanguageCode,
+      pageType: seoMetadata.pageType || 'product',
+      priority: seoMetadata.priority || 1,
+      robots: seoMetadata.robots || 'index, follow',
+    }
+    const createdSeoMetadata = await this.seoMetadataService.create(
+      ctx,
+      staticSeoMetadata,
+    )
+
+    return createdSeoMetadata
+  }
+
+  private async handleSeoMetadataUpdate(
+    ctx: RequestContext,
+    id: string,
+    seoMetadata: UpdateSeoMetadataInput,
+  ) {
+    const staticSeoMetadata: UpdateSeoMetadataInput = {
+      name: seoMetadata.name || undefined,
+      path: seoMetadata.path || undefined,
+      title: seoMetadata.title || undefined,
+      description: seoMetadata.description || undefined,
+      keywords: seoMetadata.keywords || undefined,
+      ogTitle: seoMetadata.ogTitle || undefined,
+      ogDescription: seoMetadata.ogDescription || undefined,
+      ogImage: seoMetadata.ogImage || undefined,
+      schemaMarkup: seoMetadata.schemaMarkup || undefined,
+      alternates: seoMetadata.alternates || undefined,
+      canonicalUrl: seoMetadata.canonicalUrl || undefined,
+      changefreq: seoMetadata.changefreq || undefined,
+      hreflang: seoMetadata.hreflang || undefined,
+      pageType: seoMetadata.pageType || undefined,
+      priority: seoMetadata.priority || undefined,
+      robots: seoMetadata.robots || undefined,
+    }
+    const updatedSeoMetadata = await this.seoMetadataService.update(
+      ctx,
+      id,
+      staticSeoMetadata,
+    )
+
+    return updatedSeoMetadata
   }
 }

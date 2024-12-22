@@ -1,10 +1,15 @@
-import { TranslateableEntityCreatedEvent } from '@av/common'
-import { EVENT_LIST } from '@av/common'
-import { RequestContext } from '@av/common'
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
-import { EntityType as GraphQLEntityType } from '@av/localize'
-import { TranslateableEntityUpdatedEvent } from '@av/common/events/translateable-entity.updated.event'
+
+import {
+  TranslateableEntityCreatedEvent,
+  TranslateableEntityDeletedEvent,
+  TranslateableEntityDeletedMultipleEvent,
+  TranslateableEntityUpdatedEvent,
+  EVENT_LIST,
+  RequestContext,
+} from '@av/common'
+import { GqlEntityType as GraphQLEntityType } from '@av/localize'
 
 @Injectable()
 export class TranslatableEntityEventEmitter {
@@ -31,6 +36,28 @@ export class TranslatableEntityEventEmitter {
     this.eventEmitter.emit(
       EVENT_LIST.TRANSLATEABLE_ENTITY_UPDATED,
       new TranslateableEntityUpdatedEvent(entityId, entityType, fields, ctx),
+    )
+  }
+
+  emitDeletedEvent(
+    entityId: string,
+    entityType: GraphQLEntityType,
+    ctx: RequestContext,
+  ) {
+    this.eventEmitter.emit(
+      EVENT_LIST.TRANSLATEABLE_ENTITY_DELETED,
+      new TranslateableEntityDeletedEvent(entityId, entityType, ctx),
+    )
+  }
+
+  emitDeletedMultipleEvent(
+    entityIds: string[],
+    entityType: GraphQLEntityType,
+    ctx: RequestContext,
+  ) {
+    this.eventEmitter.emit(
+      EVENT_LIST.TRANSLATEABLE_ENTITY_DELETED_MULTIPLE,
+      new TranslateableEntityDeletedMultipleEvent(entityIds, entityType, ctx),
     )
   }
 }

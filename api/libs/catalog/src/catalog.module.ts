@@ -15,9 +15,16 @@ import { GenerateFacetCollectionsResolver } from './api/graphql/resolvers/genera
 import { AiModule } from '@av/ai'
 import { GenerateProductsWithCategoriesService } from './application/services/generate-products-with-categoeries.service'
 import { LocalizeModule } from '@av/localize'
+import { SeoModule } from '@av/seo'
 
 @Module({
-  imports: [PrismaModule, RequestContextModule, AiModule, LocalizeModule],
+  imports: [
+    PrismaModule,
+    RequestContextModule,
+    AiModule,
+    LocalizeModule,
+    SeoModule,
+  ],
   providers: [
     ProductService,
     ProductResolver,
@@ -41,4 +48,4 @@ import { LocalizeModule } from '@av/localize'
     GenerateProductsWithCategoriesService,
   ],
 })
-export class ProductModule {}
+export class CatalogModule {}

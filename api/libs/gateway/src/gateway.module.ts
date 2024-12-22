@@ -1,7 +1,7 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
-import { ProductModule } from '@av/catalog'
+import { CatalogModule } from '@av/catalog'
 import { ChannelModule } from '@av/channel'
 import { RequestContextModule } from '@av/common'
 import { AssetModule } from '@av/asset'
@@ -29,7 +29,7 @@ import { LocalizeModule } from '@av/localize'
     }),
     ChannelModule,
     RequestContextModule,
-    ProductModule,
+    CatalogModule,
     AssetModule,
     UserModule,
     SeoModule,
@@ -43,7 +43,7 @@ import { LocalizeModule } from '@av/localize'
       include: [
         SeoModule,
         ChannelModule,
-        ProductModule,
+        CatalogModule,
         UserModule,
         AssetModule,
         LocalizeModule,

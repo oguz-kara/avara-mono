@@ -1,2 +1,5 @@
 export * from './event-list'
 export * from './translateable-entity-created.event'
+export * from './translateable-entity-deleted.event'
+export * from './translateable-entity-deleted-multiple.event'
+export * from './translateable-entity-updated.event'

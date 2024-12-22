@@ -16,6 +16,7 @@ export class ChannelService {
   async createChannel(
     ctx: RequestContext,
     data: Prisma.ChannelCreateInput,
+    relations: Prisma.ChannelInclude = {},
   ): Promise<Channel> {
     const token = generateChannelToken()
     const createdBy = ctx.user?.id || 'system'
@@ -29,7 +30,12 @@ export class ChannelService {
       }
 
       return await tx.channel.create({
-        data: { ...data, token, createdBy },
+        data: {
+          ...data,
+          token,
+          createdBy,
+        },
+        include: relations || undefined,
       })
     })
   }
@@ -97,24 +103,54 @@ export class ChannelService {
   async getOrCreateDefaultChannel(
     ctx: RequestContext,
     token: string,
-  ): Promise<Channel> {
-    const channel = await this.prisma.channel.findFirst({ where: { token } })
-    if (channel) return channel
+  ): Promise<Channel & { settings: Partial<ChannelSettings> }> {
+    const channel = await this.prisma.channel.findFirst({
+      where: { token },
+      include: { channelSettings: true },
+    })
+    if (channel)
+      return {
+        ...channel,
+        settings: {
+          baseUrl: channel.channelSettings.baseUrl,
+          autoTranslate: channel.channelSettings.autoTranslate,
+        },
+      }
 
     const defaultChannel = await this.prisma.channel.findFirst({
       where: { isDefault: true },
+      include: { channelSettings: true },
     })
-    if (defaultChannel) return defaultChannel
+    if (defaultChannel)
+      return {
+        ...defaultChannel,
+        settings: {
+          baseUrl: defaultChannel.channelSettings.baseUrl,
+          autoTranslate: defaultChannel.channelSettings.autoTranslate,
+        },
+      }
 
-    return this.createChannel(ctx, {
-      code: 'default',
-      name: 'Default Channel',
-      isDefault: true,
-      type: ChannelType.RETAIL,
-      currencyCode: 'USD',
-      defaultLanguageCode: 'en',
-      token: generateChannelToken(),
-      createdBy: ctx.user?.id,
-    })
+    const createdChannel = (await this.createChannel(
+      ctx,
+      {
+        code: 'default',
+        name: 'Default Channel',
+        isDefault: true,
+        type: ChannelType.RETAIL,
+        currencyCode: 'USD',
+        defaultLanguageCode: 'en',
+        token: generateChannelToken(),
+        createdBy: ctx.user?.id,
+      },
+      { channelSettings: true },
+    )) as Channel & { channelSettings: ChannelSettings }
+
+    return {
+      ...createdChannel,
+      settings: {
+        baseUrl: createdChannel.channelSettings.baseUrl,
+        autoTranslate: createdChannel.channelSettings.autoTranslate,
+      },
+    }
   }
 }

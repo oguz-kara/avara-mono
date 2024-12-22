@@ -34,7 +34,9 @@ export class TranslateAIService implements TranslateService {
     sourceLanguage: string,
     targetLanguage: string,
   ): string {
-    return `Translate the following text from ${sourceLanguage} to ${targetLanguage}: "${text}"`
+    return `Translate the following text from ${sourceLanguage} to ${targetLanguage}: "${text}" and return only the translated text.
+    e.g., Hello, world! -> Hola, mundo!
+    `
   }
 
   private createJsonPrompt(
@@ -43,10 +45,19 @@ export class TranslateAIService implements TranslateService {
     targetLanguage: string,
   ): string {
     return `
-    Translate the following json from ${sourceLanguage} to ${targetLanguage}: "${text}", return only the json object.
-    
-    Format: Provide the output strictly as a JSON object without any additional text, code block syntax, or formatting. Ensure it is directly parseable using JSON.parse() and ensure it's not throws bad control character in string literal error, make sure to remove all the bad characters.
-    Keys: The JSON object must contain the following keys:
+      Translate the following JSON object from ${sourceLanguage} to ${targetLanguage}. 
+      Output the result strictly as a valid JSON object, without any additional text, code block syntax, or comments. 
+  
+      Instructions:
+      - Only translate the values in the JSON object; do not modify the keys.
+      - The output must be directly parseable using JSON.parse() without causing any errors.
+      - Remove any invalid control characters or formatting issues in the input to ensure the JSON remains valid.
+      - Preserve the JSON structure exactly as it is while translating the values.
+  
+      Input JSON:
+      ${text}
+  
+      Output: A valid JSON object with all values translated into ${targetLanguage}.
     `
   }
 }

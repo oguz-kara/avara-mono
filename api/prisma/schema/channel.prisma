@@ -13,7 +13,6 @@ enum ChannelStatus {
 }
 
 enum AutoTranslateModel {
-    GOOGLE
     GPT_3_5_TURBO
     GPT_4
     GPT_4_O
@@ -49,8 +48,11 @@ model ChannelSettings {
     id        Int @id @default(autoincrement())
     channelId Int @unique
 
-    autoTranslate      Boolean @default(false)
+    brandName          String?
+    autoTranslate      Boolean            @default(false)
     autoTranslateModel AutoTranslateModel @default(GPT_3_5_TURBO)
+    baseUrl            String
+    dynamicSegments    Json
 
     channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 

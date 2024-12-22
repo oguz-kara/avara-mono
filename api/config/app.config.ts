@@ -71,4 +71,9 @@ export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
   ai: {
     version: process.env.AI_TRANSLATE_VERSION || 'gpt-3.5-turbo',
   },
+  segment: {
+    default: {
+      name: 'urunler',
+    },
+  },
 })
