@@ -39,6 +39,12 @@ export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
     currency: {
       default: 'USD',
     },
+    defaultSettings: {
+      translationProvider: 'GPT_3_5_TURBO',
+      enabled: true,
+      autoTranslate: true,
+      dynamicSegmentsEnabled: true,
+    },
   },
   asset: {
     fileLimit: 10,
@@ -69,6 +75,13 @@ export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
     publicUrl: process.env.MINIO_PUBLIC_URL,
   },
   ai: {
+    defaultAIModel: process.env.AI_TRANSLATE_VERSION || 'GPT_3_5_TURBO',
     version: process.env.AI_TRANSLATE_VERSION || 'gpt-3.5-turbo',
+  },
+  channel: {
+    defaultChannelToken: process.env.DEFAULT_CHANNEL_TOKEN,
+    defaultChannelLanguageCode: process.env.DEFAULT_CHANNEL_LANGUAGE_CODE,
+    defaultChannelCurrencyCode: process.env.DEFAULT_CHANNEL_CURRENCY_CODE,
+    defaultChannelCode: process.env.DEFAULT_CHANNEL_CODE,
   },
 })

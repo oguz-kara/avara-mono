@@ -224,6 +224,11 @@ type CreateRoleResponse {
   name: String!
 }
 
+input CreateSegmentInput {
+  name: String!
+  path: String!
+}
+
 input CreateSeoMetadataInput {
   alternates: String
   canonicalUrl: String
@@ -386,6 +391,7 @@ type Mutation {
   createPermission(input: CreatePermissionDto!): Permission!
   createProduct(input: CreateProductInput!): Product!
   createRole(input: CreateRoleDto!): CreateRoleResponse!
+  createSegment(input: CreateSegmentInput!): SegmentsResponseType!
   createSeoMetadata(input: CreateSeoMetadataInput!): SeoMetadata!
   createUser(input: CreateUserDto!): UserType!
   createUserAccount(input: RegisterUserDto!): CreateUserAccountSuccess!
@@ -502,6 +508,7 @@ type Query {
   searchFacetValues(query: String!, skip: Int, take: Int): FindFacetValuesResponse!
   searchFacets(query: String!, skip: Int, take: Int): FindFacetsResponse!
   searchProducts(query: String!, skip: Int, take: Int): FindProductsResponse!
+  segments: SegmentsResponseType!
   seoMetadata(id: String!): SeoMetadata
   seoMetadatas(pagination: PaginationInput): FindSeoMetadataResponse!
   sitemap: Sitemap!
@@ -550,6 +557,10 @@ enum ScopeType {
   SELF
 }
 
+type SegmentsResponseType {
+  segments: JSON!
+}
+
 type SeoMetadata {
   alternates: String
   canonicalUrl: String
@@ -591,6 +602,16 @@ type SitemapUrl {
   lastmod: String
   loc: String!
   priority: Float
+}
+
+enum TranslationProvider {
+  GOOGLE_TRANSLATE
+  GPT_3_5_TURBO
+  GPT_4
+  GPT_4_O
+  GPT_4_O_MINI
+  GPT_O1
+  GPT_O1_MINI
 }
 
 type TranslationResponse {
@@ -683,7 +704,9 @@ input UpsertTranslationInput {
   entityId: String!
   entityType: String!
   fields: JSON!
+  lastSyncedAt: DateTime!
   locale: String!
+  translationProvider: TranslationProvider!
 }
 
 """The active status of a user"""

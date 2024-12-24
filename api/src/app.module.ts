@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
+
 import { GatewayModule } from '@av/gateway'
 import { PrismaModule } from '@av/database'
-import { ConfigModule } from '@nestjs/config'
+
 import { appConfig } from 'config/app.config'
 
 @Module({

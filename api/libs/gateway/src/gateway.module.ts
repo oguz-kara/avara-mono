@@ -1,20 +1,21 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
-import { Module } from '@nestjs/common'
+import { MiddlewareConsumer, Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
 import { ProductModule } from '@av/catalog'
 import { ChannelModule } from '@av/channel'
-import { RequestContextModule } from '@av/common'
+import { ChannelGuard, RequestContextModule } from '@av/common'
 import { AssetModule } from '@av/asset'
 import { UserModule } from '@av/user'
 import { SeoModule } from '@av/seo'
 import { CommonModule } from '@av/common/common.module'
-import { AppGuard } from '@av/common/guards/app.guard'
 import { APP_GUARD } from '@nestjs/core'
 import { JwtModule } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { ConfigModule } from '@nestjs/config'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { LocalizeModule } from '@av/localize'
+import { AuthGuard, RoleGuard, AuthModule, ResourceGuard } from '@av/keycloak'
+import { AccessTokenMiddleware } from '@av/keycloak/middleware/access-token.middleware'
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { LocalizeModule } from '@av/localize'
     SeoModule,
     CommonModule,
     LocalizeModule,
+    AuthModule,
     GraphQLModule.forRoot<ApolloDriverConfig>({
       debug: true,
       driver: ApolloDriver,
@@ -68,8 +70,24 @@ import { LocalizeModule } from '@av/localize'
   providers: [
     {
       provide: APP_GUARD,
-      useClass: AppGuard,
+      useClass: ChannelGuard,
     },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: AuthGuard,
+    // },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: ResourceGuard,
+    // },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: RoleGuard,
+    // },
   ],
 })
-export class GatewayModule {}
+export class GatewayModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AccessTokenMiddleware).forRoutes('*')
+  }
+}

@@ -12,8 +12,10 @@ import { UpdateFacetInput } from '../inputs/facet.dto'
 import { FacetService } from '@av/catalog/application/services/facet.service'
 import { CreateFacetValueInput } from '../inputs/facet-value.dto'
 import { UseInterceptors } from '@nestjs/common'
+import { Resource } from '@av/keycloak'
 
 @Resolver(() => Facet)
+@Resource('Facet')
 @UseInterceptors(RequestContextInterceptor)
 export class FacetResolver {
   constructor(private readonly facetService: FacetService) {}

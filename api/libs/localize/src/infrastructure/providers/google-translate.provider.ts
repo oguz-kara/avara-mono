@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common'
-import { TranslateService } from './interfaces/translation-service.interface'
+import { TranslateProvider } from '../../application/interfaces/translation-service.interface'
 import { AIService } from '@av/ai'
+import { RequestContext } from '@av/common'
 
 @Injectable()
-export class TranslateAIService implements TranslateService {
+export class GoogleTranslateProvider implements TranslateProvider {
   constructor(private readonly aiService: AIService) {}
 
   async translate(
+    ctx: RequestContext,
     text: string,
     sourceLanguage: string,
     targetLanguage: string,

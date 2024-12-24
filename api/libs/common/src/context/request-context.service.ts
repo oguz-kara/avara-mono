@@ -3,7 +3,6 @@ import { Injectable } from '@nestjs/common'
 import { AsyncLocalStorage } from 'async_hooks'
 import { RequestContext } from './request-context'
 import { ChannelData } from './channel-context.interface'
-import { ChannelTokenNotFoundError } from './errors/channel-token-not-found-error'
 
 @Injectable()
 export class RequestContextService {
@@ -25,15 +24,13 @@ export class RequestContextService {
     headers: Record<string, string | string[]>,
   ): Promise<RequestContext> {
     try {
-      if (!channel) throw new ChannelTokenNotFoundError()
-
       const requestId =
         this.extractHeader(headers, 'x-request-id') || crypto.randomUUID()
 
       const clientInfo = this.extractClientInfo(headers)
 
       return new RequestContext({
-        channel,
+        channel: channel,
         languageCode: channel.defaultLanguageCode,
         currencyCode: channel.currencyCode,
         requestId,
