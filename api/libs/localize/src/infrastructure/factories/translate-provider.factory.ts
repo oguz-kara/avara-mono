@@ -5,7 +5,7 @@ import { OpenAITranslateProvider } from '../providers/open-ai-translate.provider
 import { GoogleTranslateProvider } from '../providers/google-translate.provider'
 import { TranslateModelType, TranslationProvider } from '@av/database'
 import { RequestContext } from '@av/common'
-import { LocalizationSettingsService } from '@av/localize/application/services/localization-settings.service'
+import { LocalizationSettingsService } from '../../application/services/localization-settings.service'
 
 @Injectable()
 export class TranslateProviderFactory {
@@ -20,7 +20,6 @@ export class TranslateProviderFactory {
     provider: TranslationProvider,
   ): Promise<TranslateProvider> {
     const providerName = await this.getTranslateProviderName(ctx, provider)
-    console.log({ providerName })
 
     if (providerName === TranslateModelType.GOOGLE_TRANSLATE) {
       return this.googleTranslateProvider

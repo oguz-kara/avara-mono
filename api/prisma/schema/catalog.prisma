@@ -35,8 +35,8 @@ model FacetValue {
     deletedAt DateTime?
     deletedBy String?
 
-    @@unique([facetId, name])
-    @@unique([facetId, code])
+    @@unique([facetId, name, channelToken])
+    @@unique([facetId, code, channelToken])
 }
 
 model Product {

@@ -1,54 +1,82 @@
 import { Injectable } from '@nestjs/common'
 import { TranslateProvider } from '../../application/interfaces/translation-service.interface'
-import { AIService } from '@av/ai'
+import { LocalizationSettingsService } from '../../application/services/localization-settings.service'
 import { RequestContext } from '@av/common'
+import { ConfigService } from '@nestjs/config'
+import { Translate } from '@google-cloud/translate/build/src/v2'
 
 @Injectable()
 export class GoogleTranslateProvider implements TranslateProvider {
-  constructor(private readonly aiService: AIService) {}
+  private readonly client: Translate
+
+  constructor(
+    private readonly localizationSettingsService: LocalizationSettingsService,
+    private readonly appConfig: ConfigService,
+  ) {
+    this.client = new Translate({
+      projectId: this.appConfig.get<string>('googleCloud.projectId'),
+      key: this.appConfig.get<string>('googleCloud.apiKey'),
+    })
+  }
 
   async translate(
     ctx: RequestContext,
     text: string,
     sourceLanguage: string,
     targetLanguage: string,
-    options: { version?: string; isJson?: boolean } = {
-      version: 'gpt-3.5-turbo',
-      isJson: true,
-    },
   ): Promise<string | Record<string, string>> {
-    if (options.isJson) {
-      const prompt = this.createJsonPrompt(text, sourceLanguage, targetLanguage)
-      const response = JSON.parse(
-        await this.aiService.generateResponse(prompt, options),
-      )
-      return response as Promise<Record<string, string>>
+    if (!text) {
+      return ''
     }
 
-    const prompt = this.createTextPrompt(text, sourceLanguage, targetLanguage)
-    const response = await this.aiService.generateResponse(prompt, options)
+    const isSlug = text.includes('-') && !text.includes(' ')
 
-    return response as Promise<string>
+    if (isSlug)
+      return await this.translateSlug(text, sourceLanguage, targetLanguage)
+
+    try {
+      const [response] = await this.client.translate(text, {
+        from: sourceLanguage,
+        to: targetLanguage,
+        format: 'text',
+      })
+
+      if (!response) {
+        throw new Error('Translation failed - no translations received')
+      }
+
+      return response
+    } catch (error) {
+      console.error('Translation failed:', error)
+      throw new Error(`Failed to translate text: ${error.message}`)
+    }
   }
 
-  private createTextPrompt(
+  private async translateSlug(
     text: string,
     sourceLanguage: string,
     targetLanguage: string,
-  ): string {
-    return `Translate the following text from ${sourceLanguage} to ${targetLanguage}: "${text}"`
-  }
+  ): Promise<string> {
+    const words = text.split('-')
+    try {
+      const [response] = await this.client.translate(words.join(' '), {
+        from: sourceLanguage,
+        to: targetLanguage,
+        format: 'text',
+      })
 
-  private createJsonPrompt(
-    text: string,
-    sourceLanguage: string,
-    targetLanguage: string,
-  ): string {
-    return `
-    Translate the following json from ${sourceLanguage} to ${targetLanguage}: "${text}", return only the json object.
-    
-    Format: Provide the output strictly as a JSON object without any additional text, code block syntax, or formatting. Ensure it is directly parseable using JSON.parse() and ensure it's not throws bad control character in string literal error, make sure to remove all the bad characters.
-    Keys: The JSON object must contain the following keys:
-    `
+      if (!response) {
+        throw new Error('Translation failed - no translations received')
+      }
+
+      return response
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+    } catch (error) {
+      console.error('Translation failed:', error)
+      throw new Error(`Failed to translate slug: ${error.message}`)
+    }
   }
 }

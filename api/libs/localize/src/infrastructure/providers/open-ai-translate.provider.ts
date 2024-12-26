@@ -4,13 +4,20 @@ import { AIService } from '@av/ai'
 import { TranslationProvider } from '@prisma/client'
 import { LocalizationSettingsService } from '../../application/services/localization-settings.service'
 import { RequestContext } from '@av/common'
+import { ConfigService } from '@nestjs/config'
 
 @Injectable()
 export class OpenAITranslateProvider implements TranslateProvider {
+  private readonly additionalInstructions: string
   constructor(
     private readonly aiService: AIService,
     private readonly localizationSettingsService: LocalizationSettingsService,
-  ) {}
+    private readonly appConfig: ConfigService,
+  ) {
+    this.additionalInstructions = appConfig.get(
+      'app.autoTranslate.additionalInstructions',
+    )
+  }
 
   async translate(
     ctx: RequestContext,
@@ -60,20 +67,48 @@ export class OpenAITranslateProvider implements TranslateProvider {
     sourceLanguage: string,
     targetLanguage: string,
   ): string {
-    return `Translate the following text from ${sourceLanguage} to ${targetLanguage} and return only the translated text: -> ${text}
-    
-    Format: Provide the output strictly as a string without any additional text, code block syntax, or formatting. Ensure it is directly parseable using JSON.parse() and ensure it's not throws bad control character in string literal error, make sure to remove all the bad characters.
-    
-    Example:
-    Input: Hello, how are you?
-    Output: Merhaba, nasılsınız?
-    
-    Input: The weather is nice today.
-    Output: Hava güzel bugün.
-    
-    Input: I love programming.
-    Output: Programlamayı seviyorum.
-    
+    return `
+  Translate the following text from "${sourceLanguage}" to "${targetLanguage}" and return only the translated text.
+
+  ${this.additionalInstructions}
+
+  ### Format Guidelines:
+  - Provide the output strictly as a **plain string**, without any additional text, code block syntax, or formatting.
+  - if you encounter a text like kebab-case, like this i-love-programming then this is a slug and you should translate it to the target language slug.
+  - Do **not** include quotation marks (single or double) in the output.
+  
+  ### Good Examples:
+  Input: Hello, how are you?
+  Output: Merhaba, nasılsınız?
+
+  Input: The weather is rainy today, did you see the "rain" in the weather?
+  Output: Hava yağmurlu bugün, havada "yağmur" gördün mü?
+
+  Input: The weather is nice today.
+  Output: Hava güzel bugün.
+  
+  Input: I love programming.
+  Output: Programlamayı seviyorum.
+
+  Input: i-love-programming-so-much.
+  Output: programlamayi-cok-seviyorum.
+  
+  ### Bad Examples:
+  Input: Hello, how are you?
+  Output: "Merhaba, nasılsınız?" (Includes quotes - Incorrect)
+  
+  Input: The weather is nice today.
+  Output: Hava güzel bugün. // Translation is correct, but includes extra text like comments.
+  
+  Input: I love programming.
+  Output:
+  \`\`\`
+  Programlamayı seviyorum
+  \`\`\`
+  (Code block formatting is not allowed)
+  
+  ### Text to translate:
+  ${text}
     `
   }
 

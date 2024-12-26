@@ -28,14 +28,19 @@ export class CollectionResolver {
   @Query(() => FindCollectionsResponse)
   async collections(
     @Ctx() ctx: RequestContext,
+    @WithRelations() relations: Record<string, boolean | object>,
     @Args('parentId', { type: () => String, nullable: true })
     parentId?: string | null,
     @Args('pagination', { nullable: true }) pagination?: PaginationInput,
   ): Promise<PaginatedItemsResponse<Collection>> {
-    return this.collectionService.getMany(ctx, {
-      where: { parentId },
-      ...pagination,
-    })
+    return this.collectionService.getMany(
+      ctx,
+      {
+        where: { parentId },
+        ...pagination,
+      },
+      relations,
+    )
   }
 
   @Query(() => Collection, { nullable: true })

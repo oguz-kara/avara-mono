@@ -81,4 +81,9 @@ export class LocalizationSettingsService {
     const settings = await this.getLocalizationSettings(ctx)
     return settings.enabled && settings.autoTranslate
   }
+
+  async isDynamicSegmentsEnabled(ctx: RequestContext): Promise<boolean> {
+    const settings = await this.getLocalizationSettings(ctx)
+    return settings.enabled && settings.dynamicSegmentsEnabled
+  }
 }

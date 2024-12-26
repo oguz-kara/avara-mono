@@ -25,7 +25,7 @@ export class FacetResolver {
     @Args('input') input: CreateFacetInput,
     @Ctx() ctx: RequestContext,
   ): Promise<Facet> {
-    return this.facetService.createFacet(ctx, input)
+    return this.facetService.create(ctx, input)
   }
 
   @Query(() => Facet)
@@ -33,8 +33,9 @@ export class FacetResolver {
     @Args('id', { type: () => ID }) id: string,
     @Ctx()
     ctx: RequestContext,
+    @WithRelations() relations: Record<string, any>,
   ): Promise<Facet> {
-    return this.facetService.getFacetById(ctx, id)
+    return this.facetService.getFacetById(ctx, id, relations)
   }
 
   @Query(() => FindFacetsResponse)
@@ -44,7 +45,7 @@ export class FacetResolver {
     @Args('skip', { type: () => Number, nullable: true }) skip?: number,
     @Args('take', { type: () => Number, nullable: true }) take?: number,
   ): Promise<PaginatedItemsResponse<Facet>> {
-    return this.facetService.getMany(ctx, relations, { skip, take })
+    return this.facetService.getMany(ctx, { skip, take }, relations)
   }
 
   @Mutation(() => Facet)
@@ -52,7 +53,7 @@ export class FacetResolver {
     @Args('input') input: UpdateFacetInput,
     @Ctx() ctx: RequestContext,
   ): Promise<Facet> {
-    return this.facetService.updateFacet(ctx, input.id, input)
+    return this.facetService.update(ctx, input.id, input)
   }
 
   @Mutation(() => Facet)

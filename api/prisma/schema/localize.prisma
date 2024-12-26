@@ -1,16 +1,3 @@
-model Segment {
-    id   Int    @id @default(autoincrement())
-    name String
-    path String
-
-    channel_token String
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@unique([channel_token, path])
-}
-
 enum EntityType {
     PRODUCT
     COLLECTION
@@ -50,6 +37,9 @@ model Translation {
     lastSyncedAt  DateTime?
 
     @@unique([entityType, entityId, locale, fieldName])
+    @@index([entityType, entityId, locale, fieldName])
+    @@index([entityType, entityId, fieldName])
+    @@index([fieldName, locale])
 }
 
 model Locales {

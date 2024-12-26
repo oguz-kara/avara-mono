@@ -14,7 +14,6 @@ export class SitemapService {
       lastmod: seoMetadata.updatedAt?.toISOString(),
       priority: seoMetadata.priority,
       changefreq: seoMetadata.changefreq,
-      alternates: seoMetadata.alternates,
     }))
 
     return { urls }

@@ -249,7 +249,6 @@ export class GenerateProductsWithCategoriesService {
             keywords: productData.seoMetadata.keywords,
             ogTitle: productData.seoMetadata.ogTitle,
             ogDescription: productData.seoMetadata.ogDescription,
-            schemaMarkup: JSON.stringify(productData.seoMetadata.schemaMarkup),
             ...seoMetadata,
             channelToken: ctx.channel.token,
           },
@@ -342,33 +341,6 @@ Instructions:
      - Summarize the category, incorporate relevant keywords, and entice users to learn more.
      - Ensure it aligns with the meta description in tone and content.
 
-   - schemaMarkup:
-     - Provide a well-structured JSON-LD object adhering to Schema.org standards.
-     - Ensure all relevant properties are included to enhance SEO and rich search results.
-     - Example structure:
-       {
-         "@context": "https://schema.org",
-         "@type": "CollectionPage",
-         "name": "Isı Transfer Yağları",
-         "description": "Endüstriyel uygulamalar için tasarlanmış premium Isı Transfer Yağlarımızı keşfedin. Yüksek kaliteli yağlayıcılarımızla verimliliği artırın ve makinelerinizi koruyun.",
-         "url": "https://www.restoreplus.store/kategoriler/isi-transfer-yaglari",
-         "mainEntity": {
-           "@type": "WebPage",
-           "name": "Isı Transfer Yağları",
-           "description": "Isı Transfer Yağlarımız, çeşitli endüstriyel uygulamalar için verimli termal yönetim ve yağlama sağlayarak makinelerinizin optimal performans ve uzun ömürlü olmasını temin eder.",
-           "url": "https://www.restoreplus.store/kategoriler/isi-transfer-yaglari",
-           "image": "https://api.restoreplus.store/uploads/preview/isi-transfer-yaglari.jpg",
-           "publisher": {
-             "@type": "Organization",
-             "name": "Restoreplus",
-             "logo": {
-               "@type": "ImageObject",
-               "url": "https://www.restoreplus.store/images/restoreplus-logo.png"
-             }
-           }
-         }
-       }
-
 Output Format:
 
 Language: All output must be in Turkish.
@@ -383,7 +355,6 @@ Keys: The JSON object must contain the following keys:
           keywords: A comma-separated list of keywords.
           ogTitle: The Open Graph title.
           ogDescription: The Open Graph description.
-          schemaMarkup: A structured JSON-LD object adhering to Schema.org standards.
 
 Example Output:
 
@@ -397,28 +368,6 @@ Example Output:
     "keywords": "ısı transfer yağları, endüstriyel yağlar, termal yönetim, yüksek performanslı yağlayıcılar",
     "ogTitle": "Isı Transfer Yağları | Restoreplus",
     "ogDescription": "Endüstriyel uygulamalar için yüksek performanslı ısı transfer yağları. Restoreplus ile makinelerinizin verimliliğini ve ömrünü artırın.",
-    "schemaMarkup": {
-      "@context": "https://schema.org",
-      "@type": "CollectionPage",
-      "name": "Isı Transfer Yağları",
-      "description": "Endüstriyel uygulamalar için tasarlanmış premium Isı Transfer Yağlarımızı keşfedin. Yüksek kaliteli yağlayıcılarımızla verimliliği artırın ve makinelerinizi koruyun.",
-      "url": "https://www.restoreplus.store/kategoriler/isi-transfer-yaglari",
-      "mainEntity": {
-        "@type": "WebPage",
-        "name": "Isı Transfer Yağları",
-        "description": "Isı Transfer Yağlarımız, çeşitli endüstriyel uygulamalar için verimli termal yönetim ve yağlama sağlayarak makinelerinizin optimal performans ve uzun ömürlü olmasını temin eder.",
-        "url": "https://www.restoreplus.store/kategoriler/isi-transfer-yaglari",
-        "image": "https://api.restoreplus.store/uploads/preview/isi-transfer-yaglari.jpg",
-        "publisher": {
-          "@type": "Organization",
-          "name": "Restoreplus",
-          "logo": {
-            "@type": "ImageObject",
-            "url": "https://www.restoreplus.store/images/restoreplus-logo.png"
-          }
-        }
-      }
-    }
   }
 }
     `
@@ -553,9 +502,6 @@ Example Output:
         create: {
           ...staticSeoMetadata,
           ...generatedCollection.seoMetadata,
-          schemaMarkup: JSON.stringify(
-            generatedCollection.seoMetadata.schemaMarkup,
-          ),
           channelToken: ctx.channel.token,
         },
       },

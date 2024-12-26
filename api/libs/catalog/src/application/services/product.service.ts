@@ -1,30 +1,36 @@
 import {
   ConflictException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+import { PrismaService, Product, Prisma } from '@av/database'
+import { EntityType } from '@av/localize'
 import {
-  PrismaService,
-  Product,
-  Prisma,
-  EntityType,
-  SeoMetadata,
-} from '@av/database'
-import { EntityType as GraphQLEntityType } from '@av/localize'
-import { PaginatedItemsResponse, RequestContext } from '@av/common'
+  EntityType as GraphQLEntityType,
+  TranslationPersistenceService,
+} from '@av/localize'
+import { EVENT_LIST, PaginatedItemsResponse, RequestContext } from '@av/common'
 import { PaginationValidator } from '@av/common/utils/pagination.validator'
 import {
   CreateProductInput,
   UpdateProductInput,
 } from '../../api/graphql/types/product.types'
-import { TranslatableEntityEventEmitter } from '@av/localize/application/emitters/translatable-entity-event.emitter'
+import { TranslatableEntityEventEmitter } from '@av/localize'
+import { EventEmitter2 } from '@nestjs/event-emitter'
+import { SeoMetadata } from '@av/seo'
 
 @Injectable()
 export class ProductService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
     private readonly paginationValidator: PaginationValidator,
+    @Inject(forwardRef(() => TranslatableEntityEventEmitter))
     private readonly translatableEntityEventEmitter: TranslatableEntityEventEmitter,
+    @Inject(forwardRef(() => TranslationPersistenceService))
+    private readonly translationPersistenceService: TranslationPersistenceService,
   ) {}
 
   async create(
@@ -36,7 +42,10 @@ export class ProductService {
     if (data?.facetValueIds?.length > 0)
       await this.verifyFacetValuesExist(data.facetValueIds)
 
-    const createdProduct = await this.prisma.product.create({ data: input })
+    const createdProduct = await this.prisma.product.create({
+      data: input,
+      include: { seoMetadata: true, featuredAsset: true },
+    })
 
     this.emitProductCreatedEvents(createdProduct, ctx)
 
@@ -54,15 +63,30 @@ export class ProductService {
   async getById(
     ctx: RequestContext,
     id: string,
-    relations: Record<string, boolean | object>,
+    options?: {
+      translated?: boolean
+      relations?: Record<string, boolean | object>
+    },
   ): Promise<Product> {
     const product = await this.prisma.product.findFirst({
       where: { id, channelToken: ctx.channel.token },
-      include: relations ?? undefined,
+      include: options?.relations ?? undefined,
     })
 
     if (!product)
       throw new NotFoundException(`Product with ID ${id} not found.`)
+
+    if (ctx.localizationSettings.enabled && options?.translated) {
+      const translatedProduct =
+        await this.translationPersistenceService.mergeEntityWithTranslation<Product>(
+          ctx,
+          product,
+          EntityType.PRODUCT,
+          options?.relations,
+        )
+
+      return translatedProduct as Product
+    }
 
     return product
   }
@@ -80,18 +104,30 @@ export class ProductService {
     if (!product)
       throw new NotFoundException(`Product with slug ${slug} not found.`)
 
+    if (ctx.localizationSettings.enabled) {
+      const translatedProduct =
+        await this.translationPersistenceService.mergeEntityWithTranslation<Product>(
+          ctx,
+          product,
+          EntityType.PRODUCT,
+          relations,
+        )
+
+      return translatedProduct as Product
+    }
+
     return product
   }
 
   async getMany(
     ctx: RequestContext,
-    relations: Record<string, boolean | object>,
     params?: {
       skip?: number
-      take?: number
+      take?: number | 'all'
       where?: Prisma.ProductWhereInput
       orderBy?: Prisma.ProductOrderByWithRelationInput
     },
+    relations?: Record<string, boolean | object>,
   ): Promise<PaginatedItemsResponse<Product>> {
     const { skip, take } =
       this.paginationValidator.validatePaginationParams(params)
@@ -108,13 +144,27 @@ export class ProductService {
       }),
     ])
 
+    if (ctx.localizationSettings.enabled) {
+      const translatedProduct =
+        await this.translationPersistenceService.mergeEntityListWithTranslation<Product>(
+          ctx,
+          items as any,
+          EntityType.PRODUCT,
+          relations,
+        )
+
+      return {
+        items: translatedProduct as any,
+        pagination: { skip, take, total },
+      }
+    }
+
     return {
       items,
       pagination: { skip, take, total },
     }
   }
 
-  // ..
   async update(
     ctx: RequestContext,
     id: string,
@@ -150,7 +200,6 @@ export class ProductService {
     return updatedProduct
   }
 
-  // ..
   async delete(
     ctx: RequestContext,
     id: string,
@@ -158,12 +207,29 @@ export class ProductService {
   ): Promise<Product> {
     await this.getById(ctx, id, relations)
 
-    return this.prisma.product.delete({
+    const deletedProduct = await this.prisma.product.delete({
       where: { id },
+      include: { seoMetadata: true },
     })
+
+    if (ctx.localizationSettings.enabled && deletedProduct) {
+      this.translatableEntityEventEmitter.emitDeletedEvent(
+        deletedProduct.id,
+        EntityType.PRODUCT as GraphQLEntityType,
+        ctx,
+      )
+
+      if (deletedProduct.seoMetadata?.id)
+        this.translatableEntityEventEmitter.emitDeletedEvent(
+          deletedProduct.seoMetadata.id,
+          EntityType.SEO_METADATA,
+          ctx,
+        )
+    }
+
+    return deletedProduct
   }
 
-  // ..
   async deleteMany(
     ctx: RequestContext,
     ids: string[],
@@ -171,15 +237,35 @@ export class ProductService {
   ): Promise<Prisma.BatchPayload> {
     const products = await this.prisma.product.findMany({
       where: { id: { in: ids } },
-      include: relations ?? undefined,
+      include: { ...relations, seoMetadata: true },
     })
+
+    const seoMetadataIds = products
+      .map((p) => p.seoMetadata?.id)
+      .filter(Boolean)
 
     if (products.length !== ids.length)
       throw new NotFoundException(`Products not found: ${ids.join(', ')}`)
 
-    return this.prisma.product.deleteMany({
+    const count = await this.prisma.product.deleteMany({
       where: { id: { in: ids }, channelToken: ctx.channel.token },
     })
+
+    this.translatableEntityEventEmitter.emitDeletedMultipleEvent(
+      ids,
+      EntityType.PRODUCT,
+      ctx,
+    )
+
+    if (seoMetadataIds.length > 0) {
+      this.translatableEntityEventEmitter.emitDeletedMultipleEvent(
+        seoMetadataIds,
+        EntityType.SEO_METADATA,
+        ctx,
+      )
+    }
+
+    return count
   }
 
   async markAsDeleted(
@@ -231,6 +317,21 @@ export class ProductService {
       }),
       this.prisma.product.count({ where: searchConditions }),
     ])
+
+    if (ctx.localizationSettings.enabled) {
+      const translatedProduct =
+        await this.translationPersistenceService.mergeEntityListWithTranslation<Product>(
+          ctx,
+          items,
+          EntityType.PRODUCT,
+          relations,
+        )
+
+      return {
+        items: translatedProduct as Product[],
+        pagination: { skip, take, total },
+      }
+    }
 
     return {
       items,
@@ -297,7 +398,7 @@ export class ProductService {
     }
   }
 
-  private emitSeoMetadataCreatedEvent(
+  private async emitSeoMetadataCreatedEvent(
     seoMetadata: SeoMetadata,
     ctx: RequestContext,
   ) {
@@ -309,11 +410,10 @@ export class ProductService {
       keywords: seoMetadata?.keywords,
       ogTitle: seoMetadata?.ogTitle,
       ogDescription: seoMetadata?.ogDescription,
-      alternates: seoMetadata?.alternates,
       canonicalUrl: seoMetadata?.canonicalUrl,
     }
 
-    if (seoMetadata) {
+    if (seoMetadata && ctx.localizationSettings.enabled) {
       this.translatableEntityEventEmitter.emitCreatedEvent(
         seoMetadata.id,
         EntityType.SEO_METADATA as GraphQLEntityType,
@@ -323,19 +423,30 @@ export class ProductService {
     }
   }
 
-  private emitProductCreatedEvents(product: Product, ctx: RequestContext) {
+  private emitProductCreatedEvents(
+    product: Product & { seoMetadata: SeoMetadata | null },
+    ctx: RequestContext,
+  ) {
     const translatableProductFields = {
       name: product.name,
       description: product.description,
       slug: product.slug,
     }
 
-    this.translatableEntityEventEmitter.emitCreatedEvent(
-      product.id,
-      EntityType.PRODUCT as GraphQLEntityType,
-      translatableProductFields,
+    this.eventEmitter.emit(EVENT_LIST.PRODUCT_CREATED, {
+      product,
+      seoMetadata: product.seoMetadata || null,
       ctx,
-    )
+    })
+
+    if (ctx.localizationSettings.enabled) {
+      this.translatableEntityEventEmitter.emitCreatedEvent(
+        product.id,
+        EntityType.PRODUCT as GraphQLEntityType,
+        translatableProductFields,
+        ctx,
+      )
+    }
   }
 
   private emitProductUpdatedEvents(product: Product, ctx: RequestContext) {
@@ -365,7 +476,6 @@ export class ProductService {
       keywords: seoMetadata?.keywords || undefined,
       ogTitle: seoMetadata?.ogTitle || undefined,
       ogDescription: seoMetadata?.ogDescription || undefined,
-      alternates: seoMetadata?.alternates || undefined,
       canonicalUrl: seoMetadata?.canonicalUrl || undefined,
     }
 

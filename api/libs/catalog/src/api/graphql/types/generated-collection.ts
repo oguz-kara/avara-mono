@@ -1,5 +1,4 @@
 import { ObjectType, Field } from '@nestjs/graphql'
-import { GraphQLJSON } from 'graphql-type-json'
 
 @ObjectType()
 export class Logo {
@@ -44,27 +43,6 @@ export class MainEntity {
 }
 
 @ObjectType()
-export class SchemaMarkup {
-  @Field(() => String)
-  'context': string
-
-  @Field(() => String)
-  'type': string
-
-  @Field(() => String)
-  name: string
-
-  @Field(() => String)
-  description: string
-
-  @Field(() => String)
-  url: string
-
-  @Field(() => MainEntity)
-  mainEntity: MainEntity
-}
-
-@ObjectType()
 export class SEOMetadata {
   @Field(() => String)
   title: string
@@ -80,9 +58,6 @@ export class SEOMetadata {
 
   @Field(() => String)
   ogDescription: string
-
-  @Field(() => GraphQLJSON, { nullable: true, description: 'Schema Markup' })
-  schemaMarkup: any
 }
 
 @ObjectType()

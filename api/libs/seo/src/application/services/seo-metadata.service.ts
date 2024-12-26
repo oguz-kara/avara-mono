@@ -40,11 +40,12 @@ export class SeoMetadataService {
     ctx: RequestContext,
     params?: {
       skip?: number
-      take?: number
+      take?: number | 'all'
       cursor?: Prisma.SeoMetadataWhereUniqueInput
       where?: Prisma.SeoMetadataWhereInput
       orderBy?: Prisma.SeoMetadataOrderByWithRelationInput
     },
+    relations?: Record<string, boolean | object>,
   ): Promise<PaginatedItemsResponse<SeoMetadata>> {
     const { cursor, where, orderBy } = params || {}
 
@@ -64,6 +65,7 @@ export class SeoMetadataService {
       cursor,
       where: { ...where, channelToken: ctx.channel.token },
       orderBy,
+      include: relations || undefined,
     })
 
     return {

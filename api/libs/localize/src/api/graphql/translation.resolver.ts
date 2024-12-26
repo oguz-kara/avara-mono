@@ -3,8 +3,8 @@ import { Ctx, RequestContext, RequestContextInterceptor } from '@av/common'
 import { UseInterceptors } from '@nestjs/common'
 import { TranslationResponse, TranslationResponseArray } from './types'
 import { UpsertTranslationInput } from './dto'
-import { TranslationPersistenceService } from '../../application/translation-persistence.service'
 import { EntityType as GraphQLEntityType } from '@av/localize'
+import { TranslationPersistenceService } from '@av/localize/application/services/translation-persistence.service'
 
 @Resolver(() => TranslationResponse)
 @UseInterceptors(RequestContextInterceptor)
@@ -47,7 +47,7 @@ export class TranslationResolver {
     entityType: GraphQLEntityType,
   ): Promise<TranslationResponseArray> {
     const translations =
-      await this.translationPersistenceService.getTranslations(
+      await this.translationPersistenceService.getTranslationsOfEntity(
         ctx,
         entityType,
         entityId,

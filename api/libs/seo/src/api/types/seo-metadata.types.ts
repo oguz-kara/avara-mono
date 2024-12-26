@@ -1,6 +1,5 @@
 import { PaginatedResponseMeta } from '@av/common'
-import { Field, ObjectType, InputType, ID } from '@nestjs/graphql'
-import { GraphQLJSON } from 'graphql-type-json'
+import { Field, ObjectType, InputType, ID, PartialType } from '@nestjs/graphql'
 
 @ObjectType()
 export class SeoMetadata {
@@ -40,9 +39,6 @@ export class SeoMetadata {
   @Field({ nullable: true })
   robots?: string
 
-  @Field(() => GraphQLJSON, { nullable: true })
-  schemaMarkup: any
-
   @Field({ nullable: true })
   hreflang?: string
 
@@ -54,9 +50,6 @@ export class SeoMetadata {
 
   @Field({ nullable: true })
   changefreq?: string
-
-  @Field({ nullable: true })
-  alternates?: string
 
   @Field({ nullable: true })
   createdAt?: Date
@@ -109,9 +102,6 @@ export class CreateSeoMetadataInput {
   @Field({ nullable: true })
   robots?: string
 
-  @Field(() => GraphQLJSON, { nullable: true })
-  schemaMarkup: any
-
   @Field({ nullable: true })
   hreflang?: string
 
@@ -123,9 +113,6 @@ export class CreateSeoMetadataInput {
 
   @Field({ nullable: true })
   changefreq?: string
-
-  @Field({ nullable: true })
-  alternates?: string
 }
 
 @InputType()
@@ -160,9 +147,6 @@ export class UpdateSeoMetadataInput {
   @Field({ nullable: true })
   robots?: string
 
-  @Field(() => GraphQLJSON, { nullable: true })
-  schemaMarkup: any
-
   @Field({ nullable: true })
   hreflang?: string
 
@@ -174,9 +158,6 @@ export class UpdateSeoMetadataInput {
 
   @Field({ nullable: true })
   changefreq?: string
-
-  @Field({ nullable: true })
-  alternates?: string
 }
 
 @ObjectType()
@@ -187,3 +168,6 @@ export class FindSeoMetadataResponse {
   @Field(() => PaginatedResponseMeta)
   pagination: PaginatedResponseMeta
 }
+
+@ObjectType()
+export class SeoMetadataPartial extends PartialType(SeoMetadata) {}

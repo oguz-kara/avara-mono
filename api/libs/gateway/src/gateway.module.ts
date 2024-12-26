@@ -1,7 +1,7 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { MiddlewareConsumer, Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
-import { ProductModule } from '@av/catalog'
+import { CatalogModule } from '@av/catalog'
 import { ChannelModule } from '@av/channel'
 import { ChannelGuard, RequestContextModule } from '@av/common'
 import { AssetModule } from '@av/asset'
@@ -14,7 +14,7 @@ import { ConfigService } from '@nestjs/config'
 import { ConfigModule } from '@nestjs/config'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { LocalizeModule } from '@av/localize'
-import { AuthGuard, RoleGuard, AuthModule, ResourceGuard } from '@av/keycloak'
+import { AuthModule } from '@av/keycloak'
 import { AccessTokenMiddleware } from '@av/keycloak/middleware/access-token.middleware'
 
 @Module({
@@ -30,7 +30,7 @@ import { AccessTokenMiddleware } from '@av/keycloak/middleware/access-token.midd
     }),
     ChannelModule,
     RequestContextModule,
-    ProductModule,
+    CatalogModule,
     AssetModule,
     UserModule,
     SeoModule,
@@ -45,7 +45,7 @@ import { AccessTokenMiddleware } from '@av/keycloak/middleware/access-token.midd
       include: [
         SeoModule,
         ChannelModule,
-        ProductModule,
+        CatalogModule,
         UserModule,
         AssetModule,
         LocalizeModule,

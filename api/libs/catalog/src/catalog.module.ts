@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 
 import { PrismaModule } from '@av/database'
 import { PaginationValidator, RequestContextModule } from '@av/common'
@@ -15,12 +15,23 @@ import { GenerateFacetCollectionsResolver } from './api/graphql/resolvers/genera
 import { AiModule } from '@av/ai'
 import { GenerateProductsWithCategoriesService } from './application/services/generate-products-with-categoeries.service'
 import { LocalizeModule } from '@av/localize'
+import { SeoModule } from '@av/seo'
+import { ProductSeoResolver } from './api/graphql/resolvers/product-seo.resolver'
+import { ProductSeoMetadataService } from './application/services/product-seo-metadata.service'
+import { CollectionSeoMetadataService } from './application/services/collection-seo-metadata.service'
 
 @Module({
-  imports: [PrismaModule, RequestContextModule, AiModule, LocalizeModule],
+  imports: [
+    PrismaModule,
+    RequestContextModule,
+    AiModule,
+    forwardRef(() => LocalizeModule),
+    SeoModule,
+  ],
   providers: [
     ProductService,
     ProductResolver,
+    ProductSeoResolver,
     CollectionService,
     CollectionResolver,
     PaginationValidator,
@@ -31,6 +42,8 @@ import { LocalizeModule } from '@av/localize'
     GenerateCategoryCollectionService,
     GenerateFacetCollectionsResolver,
     GenerateProductsWithCategoriesService,
+    ProductSeoMetadataService,
+    CollectionSeoMetadataService,
   ],
   exports: [
     ProductService,
@@ -41,4 +54,4 @@ import { LocalizeModule } from '@av/localize'
     GenerateProductsWithCategoriesService,
   ],
 })
-export class ProductModule {}
+export class CatalogModule {}

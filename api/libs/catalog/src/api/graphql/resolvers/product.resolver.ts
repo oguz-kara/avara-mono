@@ -33,7 +33,7 @@ export class ProductResolver {
     @Ctx() ctx: RequestContext,
     @Args('pagination', { nullable: true }) pagination?: PaginationInput,
   ): Promise<PaginatedItemsResponse<Product>> {
-    return this.productService.getMany(ctx, relations, pagination)
+    return this.productService.getMany(ctx, pagination, relations)
   }
 
   @Allow(Permission.READ_PRODUCT_GLOBAL, Permission.READ_CATALOG_GLOBAL)
@@ -43,7 +43,7 @@ export class ProductResolver {
     @Ctx() ctx: RequestContext,
     @Args('id', { type: () => String }) id: string,
   ): Promise<Product> {
-    return this.productService.getById(ctx, id, relations)
+    return this.productService.getById(ctx, id, { relations })
   }
 
   @Allow(Permission.READ_PRODUCT_GLOBAL, Permission.READ_CATALOG_GLOBAL)

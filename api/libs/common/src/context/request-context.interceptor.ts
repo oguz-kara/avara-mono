@@ -30,11 +30,19 @@ export class RequestContextInterceptor implements NestInterceptor {
   private async getRequestContext(context: ExecutionContext) {
     if (context.getType() === 'http') {
       const request = context.switchToHttp().getRequest()
-      return this.contextService.createContext(request.channel, request.headers)
+      return this.contextService.createContext(
+        request.channel,
+        request.localizationSettings,
+        request.headers,
+      )
     } else if ((context.getType() as string) === 'graphql') {
       const gqlContext = GqlExecutionContext.create(context)
       const { req } = gqlContext.getContext()
-      return this.contextService.createContext(req.channel, req.headers)
+      return this.contextService.createContext(
+        req.channel,
+        req.localizationSettings,
+        req.headers,
+      )
     }
   }
 

@@ -3,7 +3,7 @@ import { Resolver, Query, Mutation, Args } from '@nestjs/graphql'
 
 import { Ctx, RequestContext, RequestContextInterceptor } from '@av/common'
 
-import { SegmentService } from '@av/seo/application/segment.service'
+import { SegmentService } from '@av/seo/application/services/segment.service'
 import {
   CreateSegmentInput,
   SegmentsResponseType,

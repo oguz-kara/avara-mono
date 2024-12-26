@@ -1,1 +1,5 @@
 export * from './seo.module'
+export * from './api/types/seo-metadata.types'
+export * from './application/services/segment.service'
+export * from './application/lib'
+export * from './application/services/seo-metadata.service'

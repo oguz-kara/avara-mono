@@ -3,31 +3,25 @@ import { GqlExecutionContext } from '@nestjs/graphql'
 import { ConfigService } from '@nestjs/config'
 import { ChannelService } from '@av/channel'
 import { ChannelData } from '../context/channel-context.interface'
+import { Channel, LocalizationSettings } from '@av/database'
 
 @Injectable()
 export class ChannelGuard implements CanActivate {
-  private readonly DEFAULT_CHANNEL_TOKEN: string
-  private readonly DEFAULT_CHANNEL_LANGUAGE_CODE: string
-  private readonly DEFAULT_CHANNEL_CURRENCY_CODE: string
-  private readonly DEFAULT_CHANNEL_CODE: string
+  private readonly defaultChannel: Channel
+  private readonly defaultLocalizationSettings: LocalizationSettings
 
   constructor(
     private readonly channelService: ChannelService,
     private readonly configService: ConfigService,
   ) {
-    this.DEFAULT_CHANNEL_TOKEN = configService.get(
-      'channel.defaultChannelToken',
+    this.defaultChannel = configService.get('channel.defaultChannel')
+    this.defaultLocalizationSettings = configService.get(
+      'localization.defaultSettings',
     )
-    this.DEFAULT_CHANNEL_LANGUAGE_CODE = configService.get(
-      'channel.defaultChannelLanguageCode',
-    )
-    this.DEFAULT_CHANNEL_CURRENCY_CODE = configService.get(
-      'channel.defaultChannelCurrencyCode',
-    )
-    this.DEFAULT_CHANNEL_CODE = configService.get('channel.defaultChannelCode')
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    this.setLocalizationSettingsToRequest(context)
     await this.setChannelToRequest(context)
 
     return true
@@ -38,31 +32,34 @@ export class ChannelGuard implements CanActivate {
 
     const channelToken = request.headers['x-channel-token']
 
-    const channel = await this.channelService.getChannelByToken(channelToken)
-
-    console.log({ channel })
-
-    const channelData: ChannelData = channel
-      ? {
-          token: channel.token,
-          code: channel.code,
-          defaultLanguageCode: channel.defaultLanguageCode,
-          currencyCode: channel.currencyCode,
-        }
+    const channel = channelToken
+      ? await this.channelService.getChannelByToken(channelToken)
       : this.getDefaultChannelData()
 
-    console.log({ channelData })
+    const channelData: ChannelData = {
+      token: channel.token,
+      code: channel.code,
+      defaultLanguageCode: channel.defaultLanguageCode,
+      currencyCode: channel.currencyCode,
+    }
 
     request.channel = channelData
   }
 
+  private setLocalizationSettingsToRequest(context: ExecutionContext) {
+    const request = this.getRequest(context)
+
+    const settings = this.getDefaultLocalizationSettings()
+
+    request.localizationSettings = settings
+  }
+
   private getDefaultChannelData(): ChannelData {
-    return {
-      token: this.DEFAULT_CHANNEL_TOKEN,
-      defaultLanguageCode: this.DEFAULT_CHANNEL_LANGUAGE_CODE,
-      currencyCode: this.DEFAULT_CHANNEL_CURRENCY_CODE,
-      code: this.DEFAULT_CHANNEL_CODE,
-    }
+    return this.defaultChannel
+  }
+
+  private getDefaultLocalizationSettings(): LocalizationSettings {
+    return this.defaultLocalizationSettings
   }
 
   private getRequest(context: ExecutionContext) {

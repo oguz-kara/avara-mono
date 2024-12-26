@@ -4,9 +4,9 @@ import {
   LocalizationSettingsService,
   TranslateProviderFactory,
   UpsertTranslationInput,
+  TranslationPersistenceService,
 } from '@av/localize'
-import { TranslationPersistenceService } from '@av/localize/application/translation-persistence.service'
-import { TranslationProvider as GqlTranslationProvider } from '@av/localize/api/graphql/enum'
+import { TranslationProvider as GqlTranslationProvider } from '@av/localize'
 
 import { Injectable } from '@nestjs/common'
 
@@ -25,7 +25,7 @@ export class SegmentService {
   ) {
     const translationProvider = await this.translateProviderFactory.getProvider(
       ctx,
-      undefined,
+      'GOOGLE_TRANSLATE',
     )
     const settings =
       await this.localizationSettingsService.getLocalizationSettings(ctx)
@@ -38,7 +38,10 @@ export class SegmentService {
       },
     })
 
-    // 2) Fetch all active locales
+    if (!settings.enabled && !settings.dynamicSegmentsEnabled) {
+      return { segment }
+    }
+
     const locales = await this.prisma.locales.findMany({
       where: { isActive: true, channel_token: ctx.channel.token },
     })
@@ -81,15 +84,65 @@ export class SegmentService {
       where: { channel_token: ctx.channel.token },
     })
 
+    const settings = ctx.localizationSettings
+
+    if (!settings.enabled && !settings.dynamicSegmentsEnabled) {
+      return segments
+    }
+
     return await Promise.all(
       segments.map((segment) => ({
         segment,
-        translations: this.translationService.getTranslations(
+        translations: this.translationService.getTranslationsOfEntity(
           ctx,
           EntityType.SEGMENT,
           segment.id.toString(),
         ),
       })),
     )
+  }
+
+  async getLocalizedSegmentByPath(ctx: RequestContext, path: string) {
+    const segment = await this.prisma.segment.findFirst({
+      where: { channel_token: ctx.channel.token, path },
+    })
+
+    const settings = ctx.localizationSettings
+
+    if (settings.enabled && settings.dynamicSegmentsEnabled) {
+      const translatedSegment =
+        await this.translationService.mergeEntityWithTranslation(
+          ctx,
+          { ...segment, id: segment.id.toString() },
+          EntityType.SEGMENT,
+        )
+
+      return translatedSegment
+    }
+
+    return segment
+  }
+
+  async getSegmentByPath(ctx: RequestContext, path: string) {
+    const segment = await this.prisma.segment.findFirst({
+      where: { channel_token: ctx.channel.token, path },
+    })
+
+    // get segment translations
+    const translations = await this.translationService.getTranslationsOfEntity(
+      ctx,
+      EntityType.SEGMENT,
+      segment.id.toString(),
+    )
+
+    return { segment, translations }
+  }
+
+  async getMany(ctx: RequestContext) {
+    const segments = await this.prisma.segment.findMany({
+      where: { channel_token: ctx.channel.token },
+    })
+
+    return segments
   }
 }

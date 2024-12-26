@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'async_hooks'
 import { ChannelData } from './channel-context.interface'
-import { User } from '@prisma/client'
+import { LocalizationSettings, User } from '@av/database'
 
 export interface ClientInfo {
   userAgent?: string
@@ -20,6 +20,8 @@ export interface RequestContextProps {
   userId?: string
   tenantId?: string
   user?: User
+  localizationSettings?: LocalizationSettings
+  isDefaultLanguage: boolean
 }
 
 export class RequestContext {
@@ -35,9 +37,13 @@ export class RequestContext {
   private readonly _userId?: string
   private readonly _tenantId?: string
   private readonly _user?: User
+  private readonly _localizationSettings?: LocalizationSettings
+  private readonly _isDefaultLanguage: boolean
 
   constructor(props: RequestContextProps) {
     this._channel = props.channel
+    this._localizationSettings = props.localizationSettings
+    this._isDefaultLanguage = props.isDefaultLanguage
     this._languageCode = props.languageCode
     this._currencyCode = props.currencyCode
     this._requestId = props.requestId
@@ -75,12 +81,20 @@ export class RequestContext {
     }
   }
 
+  get localizationSettings(): LocalizationSettings | undefined {
+    return this._localizationSettings
+  }
+
   get channel(): ChannelData {
     return this._channel
   }
 
   get languageCode(): string {
     return this._languageCode
+  }
+
+  get isDefaultLanguage(): boolean {
+    return this._isDefaultLanguage
   }
 
   get currencyCode(): string {
@@ -134,6 +148,7 @@ export class RequestContext {
       currencyCode: this._currencyCode,
       requestId: crypto.randomUUID(),
       timestamp: new Date(),
+      isDefaultLanguage: this._isDefaultLanguage,
       clientInfo: {
         ...this._clientInfo,
       },

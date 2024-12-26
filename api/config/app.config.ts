@@ -1,7 +1,11 @@
 import { ConfigFactory, ConfigObject } from '@nestjs/config'
 import { supportedTypes } from './file-types.config'
+import { additionalInstructionsTranslationAi } from './instructions-translation-ai'
 
 export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
+  brand: {
+    name: 'Restoreplus',
+  },
   client: {
     baseUrl: process.env.CLIENT_BASE_URL,
   },
@@ -33,8 +37,8 @@ export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
       version: process.env.AI_TRANSLATE_VERSION || 'gpt-3.5-turbo',
     },
     language: {
-      default: 'en',
-      available: ['en', 'fr'],
+      default: 'tr-TR',
+      available: ['en-US', 'es-ES', 'tr-TR'],
     },
     currency: {
       default: 'USD',
@@ -44,6 +48,15 @@ export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
       enabled: true,
       autoTranslate: true,
       dynamicSegmentsEnabled: true,
+    },
+    segmentPaths: {
+      products: '/products',
+      collections: '/collections',
+      categories: '/categories',
+    },
+    autoTranslate: {
+      slugify: true,
+      additionalInstructions: additionalInstructionsTranslationAi,
     },
   },
   asset: {
@@ -79,9 +92,19 @@ export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
     version: process.env.AI_TRANSLATE_VERSION || 'gpt-3.5-turbo',
   },
   channel: {
-    defaultChannelToken: process.env.DEFAULT_CHANNEL_TOKEN,
-    defaultChannelLanguageCode: process.env.DEFAULT_CHANNEL_LANGUAGE_CODE,
-    defaultChannelCurrencyCode: process.env.DEFAULT_CHANNEL_CURRENCY_CODE,
-    defaultChannelCode: process.env.DEFAULT_CHANNEL_CODE,
+    defaultChannel: {
+      name: 'Default',
+      token: process.env.DEFAULT_CHANNEL_TOKEN,
+      code: process.env.DEFAULT_CHANNEL_CODE,
+      defaultLanguageCode: process.env.DEFAULT_CHANNEL_LANGUAGE_CODE,
+      currencyCode: process.env.DEFAULT_CHANNEL_CURRENCY_CODE,
+      isDefault: true,
+      status: 'ACTIVE',
+      type: 'OTHER',
+    },
+  },
+  googleCloud: {
+    projectId: process.env.GOOGLE_TRANSLATE_PROJECT_ID,
+    apiKey: process.env.GOOGLE_TRANSLATE_API_KEY,
   },
 })
