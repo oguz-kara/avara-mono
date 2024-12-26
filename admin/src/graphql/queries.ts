@@ -177,12 +177,10 @@ export const GET_PRODUCT_BY_ID = gql`
         ogDescription
         ogImage
         robots
-        schemaMarkup
         hreflang
         pageType
         priority
         changefreq
-        alternates
       }
       description
       createdAt
@@ -337,12 +335,10 @@ export const GET_COLLECTION = gql`
         ogDescription
         ogImage
         robots
-        schemaMarkup
         hreflang
         pageType
         priority
         changefreq
-        alternates
       }
       updatedAt
       updatedBy

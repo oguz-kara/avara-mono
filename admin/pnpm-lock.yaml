@@ -59,6 +59,9 @@ dependencies:
   '@tiptap/starter-kit':
     specifier: ^2.10.3
     version: 2.10.3
+  cookie:
+    specifier: ^1.0.2
+    version: 1.0.2
   cookies-next:
     specifier: ^5.0.2
     version: 5.0.2(next@15.0.3)
@@ -68,6 +71,9 @@ dependencies:
   js-cookie:
     specifier: ^3.0.5
     version: 3.0.5
+  keycloak-js:
+    specifier: ^26.0.7
+    version: 26.0.7
   lodash:
     specifier: ^4.17.21
     version: 4.17.21
@@ -92,11 +98,17 @@ dependencies:
   react-hook-form:
     specifier: ^7.53.2
     version: 7.53.2(react@19.0.0-rc-66855b96-20241106)
+  server-only:
+    specifier: ^0.0.1
+    version: 0.0.1
   zod:
     specifier: ^3.23.8
     version: 3.23.8
 
 devDependencies:
+  '@types/cookie':
+    specifier: ^1.0.0
+    version: 1.0.0
   '@types/js-cookie':
     specifier: ^3.0.6
     version: 3.0.6
@@ -2634,6 +2646,13 @@ packages:
       '@tiptap/pm': 2.10.3
     dev: false
 
+  /@types/cookie@1.0.0:
+    resolution: {integrity: sha512-mGFXbkDQJ6kAXByHS7QAggRXgols0mAdP4MuXgloGY1tXokvzaFFM4SMqWvf7AH0oafI7zlFJwoGWzmhDqTZ9w==}
+    deprecated: This is a stub types definition. cookie provides its own type definitions, so you do not need this installed.
+    dependencies:
+      cookie: 1.0.2
+    dev: true
+
   /@types/js-cookie@3.0.6:
     resolution: {integrity: sha512-wkw9yd1kEXOPnvEeEV1Go1MmxtBJL0RR79aOTAApecWFVu7w0NNXNqhcWgvw2YgZDYadliXkl14pa3WXw5jlCQ==}
     dev: true
@@ -3511,7 +3530,6 @@ packages:
   /cookie@1.0.2:
     resolution: {integrity: sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==}
     engines: {node: '>=18'}
-    dev: false
 
   /cookies-next@5.0.2(next@15.0.3):
     resolution: {integrity: sha512-Ft5yXMbN6wMfgLiL5TMyPnxsjkW6UEjZw0YMoDMiF3F6iYdFPjiJEMugx/sivUr8G+0xPG80lBYqI2b+VquSuw==}
@@ -5151,6 +5169,10 @@ packages:
       object.values: 1.2.0
     dev: true
 
+  /keycloak-js@26.0.7:
+    resolution: {integrity: sha512-vKCk1ISMiouYRLjMzi5fKp58RnYxKEBS29BoDgVfYwVW94IXchj9jLqBvIet31VD1v79l3WaWT+WMX7fH8O4wA==}
+    dev: false
+
   /keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
     dependencies:
@@ -6381,6 +6403,10 @@ packages:
       no-case: 3.0.4
       tslib: 2.8.1
       upper-case-first: 2.0.2
+    dev: false
+
+  /server-only@0.0.1:
+    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
     dev: false
 
   /set-blocking@2.0.0:

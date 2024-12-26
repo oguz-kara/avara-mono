@@ -1,28 +1,18 @@
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { AuthService, getServerTokens, ServerTokens } from './lib/auth'
 
 export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
+  const tokens = await getServerTokens()
 
-  const publicPaths = ['/kimlik-dogrulama']
-
-  const isPublicPath = publicPaths.some(
-    (path) => pathname === path || pathname.startsWith(`${path}`)
-  )
-
-  if (isPublicPath) {
-    return NextResponse.next()
+  if (!tokens?.refreshToken) {
+    return NextResponse.redirect(new URL('/kimlik-dogrulama', req.url))
   }
 
-  const cookieStore = await cookies()
-  const token = cookieStore.get('access_token')?.value
-
-  if (!token) {
-    const url = req.nextUrl.clone()
-    url.pathname = '/kimlik-dogrulama'
-    url.searchParams.set('from', pathname)
-    return NextResponse.redirect(url)
+  const authService = AuthService.createInstance()
+  if (tokens?.refreshToken && !tokens?.accessToken) {
+    await authService.refresh(tokens.refreshToken)
   }
+
   return NextResponse.next()
 }
 

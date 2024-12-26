@@ -11,29 +11,30 @@ import {
 import { deepPurple } from '@mui/material/colors'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import LogoutIcon from '@mui/icons-material/Logout'
-import { useUser } from '../context/use-user'
 import { useRouter } from 'next/navigation'
+import { useSession } from '@avc/lib/auth/hooks/use-session'
 
 const UserIndicator: React.FC = () => {
   const router = useRouter()
-  const { currentUser, setCurrentUser, logout } = useUser()
+  const { user, status, signOut } = useSession()
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
 
-  if (!currentUser) return null // Optionally, render nothing or a login button if user is not logged in
+  if (status === 'unauthenticated') return null
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
   }
 
   const handleLogout = async () => {
-    await logout()
-    router.push('/kimlik-dogrulama')
+    await signOut(() => {
+      router.push('/kimlik-dogrulama')
+    })
   }
 
   // Extract the first character of the email for the Avatar
-  const avatarLetter = currentUser.email.charAt(0).toUpperCase()
+  const avatarLetter = user?.username?.charAt(0).toUpperCase()
 
-  if (!currentUser) return null
+  if (!user) return null
 
   return (
     <Box display="flex" alignItems="center">
@@ -43,7 +44,7 @@ const UserIndicator: React.FC = () => {
         </Avatar>
       </IconButton>
       <Typography variant="body1" sx={{ ml: 1, mr: 1 }}>
-        {currentUser.email}
+        {user.username}
       </Typography>
       <IconButton onClick={handleMenuOpen} size="small">
         <ArrowDropDownIcon />

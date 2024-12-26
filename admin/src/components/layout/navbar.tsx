@@ -32,14 +32,9 @@ function NavBar({ navbarItems }: { navbarItems: NavbarItemType[] }) {
         disableGutters
         sx={{ display: 'flex', alignItems: 'center', gap: 4 }}
       >
-        {/* Left-Aligned Items */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <RestorePlusLogo />
-          {channels.length === 0 ? (
-            <CircularProgress color="inherit" size={24} />
-          ) : (
-            <ChannelPicker />
-          )}
+          <ChannelPicker />
           <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
             {navbarItems.map((item) => (
               <NavbarItem key={item.label} item={item} />
@@ -50,7 +45,6 @@ function NavBar({ navbarItems }: { navbarItems: NavbarItemType[] }) {
         {/* Spacer to Push UserIndicator to the Right */}
         <Box sx={{ flexGrow: 1 }} />
 
-        {/* Right-Aligned User Indicator */}
         <UserIndicator />
       </Toolbar>
     </AppBar>

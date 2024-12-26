@@ -5,8 +5,8 @@ import Providers from '@avc/providers'
 import { ChannelProvider } from '@avc/features/channel/context/channel-contex'
 import { initializeSDK } from '@avc/lib/sdk'
 import './globals.css'
-import { UserProvider } from '@avc/features/auth/context/use-user'
-import { getServersideUser } from '@avc/features/auth/api/get-server-user'
+import { getServerSession } from '@avc/lib/auth'
+import { SessionProvider } from '@avc/lib/auth/hooks/use-session'
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -29,10 +29,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const session = await getServerSession()
+
+
   const sdk = await initializeSDK()
 
-  const channels = await sdk.channels.getChannels()
-  const user = await getServersideUser()
+  const channels = session ? await sdk.channels.getChannels() : []
 
   return (
     <html lang="en">
@@ -42,11 +44,11 @@ export default async function RootLayout({
       >
         <Providers>
           <CssBaseline />
-          <UserProvider initialUser={user}>
-            <ChannelProvider initialChannels={channels}>
+          <ChannelProvider initialChannels={channels}>
+            <SessionProvider initialSession={session}>
               {children}
-            </ChannelProvider>
-          </UserProvider>
+            </SessionProvider>
+          </ChannelProvider>
         </Providers>
       </body>
     </html>

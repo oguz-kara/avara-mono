@@ -4,14 +4,39 @@ services:
   avara-dev-db:
     image: postgres:latest
     container_name: avara-dev-db
-    environment:
-      POSTGRES_USER: avara_dev_db
-      POSTGRES_PASSWORD: 4784961Edc!
-      POSTGRES_DB: avara_dev_db
+    env_file:
+      - ./api/.env.production
     ports:
       - "5445:5432"
     volumes:
       - avara-dev-db:/var/lib/postgresql/data
+    networks:
+      - avara-network
+
+  keycloak-db:
+    image: postgres:latest
+    container_name: keycloak-db
+    env_file:
+      - ./keycloak/.env.production
+    ports:
+      - "5446:5432"
+    volumes:
+      - keycloak-db:/var/lib/postgresql/data
+    networks:
+      - avara-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    depends_on:
+      - keycloak-db
+    env_file:
+      - ./keycloak/.env.production
+    command: ["start-dev"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak-themes:/opt/keycloak/themes
     networks:
       - avara-network
 
@@ -63,6 +88,7 @@ volumes:
   minio_data:
   minio_config:
   avara-dev-db:
+  keycloak-db:
   uploads-data:
     driver: local
 

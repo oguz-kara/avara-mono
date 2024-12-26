@@ -197,30 +197,6 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
               )}
             />
 
-            {/* Schema Markup */}
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Schema Markup (JSON-LD)
-              </Typography>
-              <Typography
-                variant="caption"
-                color="textSecondary"
-                sx={{ mb: 2, display: 'block' }}
-              >
-                Yapılandırılmış veri işaretlemesi için JSON-LD formatında schema
-              </Typography>
-              <Controller
-                name="seoMetadata.schemaMarkup"
-                control={control}
-                render={({ field }) => (
-                  <JsonEditor
-                    value={field.value || ''}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </Box>
-
             {/* Change Frequency */}
             <Controller
               name="seoMetadata.changefreq"
@@ -275,23 +251,6 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
                   label="Dil ve Bölge"
                   placeholder="Örnek: tr-TR"
                   helperText="Sayfa içeriğinin dil ve bölge hedeflemesi"
-                  fullWidth
-                  sx={{ mt: 2 }}
-                />
-              )}
-            />
-
-            {/* Alternates */}
-            <Controller
-              name="seoMetadata.alternates"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  value={field.value || ''}
-                  label="Alternatif URL'ler"
-                  placeholder="Alternatif sayfa URL'leri"
-                  helperText="Farklı dil veya bölgeler için alternatif sayfalar"
                   fullWidth
                   sx={{ mt: 2 }}
                 />

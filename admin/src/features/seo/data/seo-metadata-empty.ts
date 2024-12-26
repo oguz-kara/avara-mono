@@ -6,11 +6,9 @@ export const seoMetadataEmpty = {
   ogDescription: '',
   ogImage: '',
   robots: 'index, follow',
-  schemaMarkup: '',
   hreflang: 'tr-TR',
   pageType: '',
   priority: 0,
   changefreq: 'daily' as any,
-  alternates: '',
   canonicalUrl: '',
 }

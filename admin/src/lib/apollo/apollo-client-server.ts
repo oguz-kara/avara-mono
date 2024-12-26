@@ -1,40 +1,43 @@
+import 'server-only'
 import { ApolloClient, from, InMemoryCache, HttpLink } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { cookies } from 'next/headers'
 
 const httpLink = new HttpLink({
   uri: `${process.env.NEXT_PUBLIC_REMOTE_URL}/admin-api`,
-  credentials: 'include',
+  fetchOptions: {
+    credentials: 'include', // Include cookies
+  },
 })
 
-// Middleware to attach the channel token using setContext with async function
-const authLink = setContext(async (operation, { headers }) => {
-  // Retrieve cookies synchronously
+const authLink = setContext(async (_, { headers }) => {
   const cookieStore = await cookies()
-  const channelToken = cookieStore.get('channel_token')?.value || ''
-  const accessToken = cookieStore.get('access_token')?.value || ''
+  const allCookies = cookieStore.getAll()
+  const cookieHeader = allCookies
+    .map(({ name, value }) => `${name}=${value}`)
+    .join('; ')
 
-  const cookieHeader = accessToken ? `access_token=${accessToken}` : ''
+  const channelToken = cookieStore.get('channel_token')?.value || ''
 
   return {
     headers: {
       ...headers,
-      Cookie: cookieHeader,
-      'x-access-token': accessToken,
-      'x-channel-token': channelToken,
+      Cookie: cookieHeader, // Attach cookies
+      'x-channel-token': channelToken, // Attach channel token
     },
   }
 })
 
+// Combine links
 const link = from([authLink, httpLink])
 
 export const serverClient = new ApolloClient({
   link,
   cache: new InMemoryCache(),
-  ssrMode: true,
+  ssrMode: true, // Enable server-side rendering
   defaultOptions: {
     query: {
-      fetchPolicy: 'no-cache',
+      fetchPolicy: 'no-cache', // Don't cache queries
     },
   },
 })
