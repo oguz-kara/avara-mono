@@ -3,15 +3,17 @@ import { FacetValueService } from '@av/catalog/application/services/facet-value.
 import { FacetService } from '@av/catalog/application/services/facet.service'
 import { ProductService } from '@av/catalog/application/services/product.service'
 import { RequestContext } from '@av/common'
+import {
+  LocalesService,
+  TranslationOrchestratorService,
+  TranslationPersistenceService,
+} from '@av/localize'
 import { TranslationProvider } from '@av/localize/api/graphql/enum'
 import { SegmentService } from '@av/seo'
 import { SeoMetadataService } from '@av/seo/application/services/seo-metadata.service'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { EntityType } from '@prisma/client'
-import { TranslationPersistenceService } from './translation-persistence.service'
-import { LocalesService } from './locales.service'
-import { TranslationOrchestratorService } from './translation-orchestrator.service'
 
 @Injectable()
 export class SyncEntityTranslationsService {
@@ -146,7 +148,7 @@ export class SyncEntityTranslationsService {
                 await this.translationOrchestratorService.translateFields(
                   ctx,
                   Object.fromEntries(filteredFields) as any,
-                  l,
+                  ctx.channel.defaultLanguageCode,
                   l,
                 )
               return this.translationPersistenceService.upsertTranslations(

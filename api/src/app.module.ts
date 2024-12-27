@@ -5,16 +5,21 @@ import { GatewayModule } from '@av/gateway'
 import { PrismaModule } from '@av/database'
 
 import { appConfig } from 'config/app.config'
+import { EventEmitterModule } from '@nestjs/event-emitter'
+import { CommonModule, RequestContextModule } from '@av/common'
 
 @Module({
   imports: [
+    GatewayModule,
+    PrismaModule,
+    RequestContextModule,
+    CommonModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig],
       envFilePath: getEnvFilePath(),
     }),
-    GatewayModule,
-    PrismaModule,
+    EventEmitterModule.forRoot(),
   ],
 })
 export class AppModule {}

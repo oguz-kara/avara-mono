@@ -2,11 +2,9 @@ import { UseInterceptors } from '@nestjs/common'
 import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql'
 
 import {
-  Allow,
   Ctx,
   PaginatedItemsResponse,
   PaginationInput,
-  Permission,
   RequestContext,
   RequestContextInterceptor,
   WithRelations,
@@ -26,7 +24,6 @@ import { BatchPayload } from '@av/database'
 export class ProductResolver {
   constructor(private readonly productService: ProductService) {}
 
-  @Allow(Permission.READ_PRODUCT_GLOBAL, Permission.READ_CATALOG_GLOBAL)
   @Query(() => FindProductsResponse)
   async products(
     @WithRelations() relations: Record<string, boolean | object>,
@@ -36,27 +33,18 @@ export class ProductResolver {
     return this.productService.getMany(ctx, pagination, relations)
   }
 
-  @Allow(Permission.READ_PRODUCT_GLOBAL, Permission.READ_CATALOG_GLOBAL)
   @Query(() => Product)
   async product(
     @WithRelations() relations: Record<string, boolean | object>,
     @Ctx() ctx: RequestContext,
     @Args('id', { type: () => String }) id: string,
   ): Promise<Product> {
-    return this.productService.getById(ctx, id, { relations })
+    return this.productService.getById(ctx, id, {
+      relations,
+      translated: true,
+    })
   }
 
-  @Allow(Permission.READ_PRODUCT_GLOBAL, Permission.READ_CATALOG_GLOBAL)
-  @Query(() => Product)
-  async productBySlug(
-    @WithRelations() relations: Record<string, boolean | object>,
-    @Ctx() ctx: RequestContext,
-    @Args('slug', { type: () => String }) slug: string,
-  ): Promise<Product> {
-    return this.productService.getBySlug(ctx, slug, relations)
-  }
-
-  @Allow(Permission.CREATE_PRODUCT_GLOBAL, Permission.CREATE_CATALOG_GLOBAL)
   @Mutation(() => Product)
   async createProduct(
     @Ctx() ctx: RequestContext,
@@ -65,7 +53,6 @@ export class ProductResolver {
     return this.productService.create(ctx, input)
   }
 
-  @Allow(Permission.UPDATE_PRODUCT_GLOBAL, Permission.UPDATE_CATALOG_GLOBAL)
   @Mutation(() => Product)
   async updateProduct(
     @Ctx() ctx: RequestContext,
@@ -75,7 +62,6 @@ export class ProductResolver {
     return this.productService.update(ctx, id, input as any)
   }
 
-  @Allow(Permission.DELETE_PRODUCT_GLOBAL, Permission.DELETE_CATALOG_GLOBAL)
   @Mutation(() => Product)
   async deleteProduct(
     @Ctx() ctx: RequestContext,
@@ -84,7 +70,6 @@ export class ProductResolver {
     return this.productService.delete(ctx, id)
   }
 
-  @Allow(Permission.DELETE_PRODUCT_GLOBAL, Permission.DELETE_CATALOG_GLOBAL)
   @Mutation(() => BatchPayload)
   async deleteProducts(
     @Ctx() ctx: RequestContext,
@@ -93,7 +78,6 @@ export class ProductResolver {
     return this.productService.deleteMany(ctx, ids)
   }
 
-  @Allow(Permission.READ_PRODUCT_GLOBAL, Permission.READ_CATALOG_GLOBAL)
   @Query(() => FindProductsResponse)
   async searchProducts(
     @WithRelations() relations: Record<string, boolean | object>,

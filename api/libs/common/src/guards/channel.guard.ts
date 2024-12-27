@@ -1,7 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common'
 import { GqlExecutionContext } from '@nestjs/graphql'
 import { ConfigService } from '@nestjs/config'
-import { ChannelService } from '@av/channel'
 import { ChannelData } from '../context/channel-context.interface'
 import { Channel, LocalizationSettings } from '@av/database'
 
@@ -10,10 +9,7 @@ export class ChannelGuard implements CanActivate {
   private readonly defaultChannel: Channel
   private readonly defaultLocalizationSettings: LocalizationSettings
 
-  constructor(
-    private readonly channelService: ChannelService,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     this.defaultChannel = configService.get('channel.defaultChannel')
     this.defaultLocalizationSettings = configService.get(
       'localization.defaultSettings',
@@ -30,11 +26,13 @@ export class ChannelGuard implements CanActivate {
   private async setChannelToRequest(context: ExecutionContext) {
     const request = this.getRequest(context)
 
-    const channelToken = request.headers['x-channel-token']
+    // const channelToken = request.headers['x-channel-token']
 
-    const channel = channelToken
-      ? await this.channelService.getChannelByToken(channelToken)
-      : this.getDefaultChannelData()
+    // const channel = channelToken
+    //   ? await this.channelService.getChannelByToken(channelToken)
+    //   : this.getDefaultChannelData()
+
+    const channel = this.getDefaultChannelData()
 
     const channelData: ChannelData = {
       token: channel.token,

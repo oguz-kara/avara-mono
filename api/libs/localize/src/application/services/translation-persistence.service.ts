@@ -37,6 +37,37 @@ export class TranslationPersistenceService {
     return { ...this.parseToObject(translation), locale } as T
   }
 
+  async getEntityIdBySlugTranslation(
+    ctx: RequestContext,
+    entityType: EntityType,
+    slug: string,
+    locale: string,
+  ): Promise<string | null> {
+    const hasLocale = await this.localesService.hasLocale(ctx, locale)
+
+    if (!hasLocale) {
+      locale = ctx.channel.defaultLanguageCode
+    }
+
+    console.log({ locale })
+
+    const slugTranslation = await this.prisma.translation.findFirst({
+      where: {
+        entityType,
+        fieldName: 'slug',
+        translatedValue: slug,
+        locale,
+        channel_token: ctx.channel.token,
+      },
+    })
+
+    if (!slugTranslation) {
+      return null
+    }
+
+    return slugTranslation['entityId']
+  }
+
   async getTranslationsOfEntity<T = Record<string, string>>(
     ctx: RequestContext,
     entityType: EntityType,

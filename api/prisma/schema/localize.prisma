@@ -37,6 +37,7 @@ model Translation {
     lastSyncedAt  DateTime?
 
     @@unique([entityType, entityId, locale, fieldName])
+    @@index([fieldName, translatedValue, entityType, locale])
     @@index([entityType, entityId, locale, fieldName])
     @@index([entityType, entityId, fieldName])
     @@index([fieldName, locale])

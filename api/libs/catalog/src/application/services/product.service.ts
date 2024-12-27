@@ -96,27 +96,36 @@ export class ProductService {
     slug: string,
     relations: Record<string, boolean | object>,
   ): Promise<Product> {
-    const product = await this.prisma.product.findFirst({
-      where: { slug, channelToken: ctx.channel.token },
-      include: relations ?? undefined,
-    })
-
-    if (!product)
-      throw new NotFoundException(`Product with slug ${slug} not found.`)
-
-    if (ctx.localizationSettings.enabled) {
-      const translatedProduct =
-        await this.translationPersistenceService.mergeEntityWithTranslation<Product>(
-          ctx,
-          product,
-          EntityType.PRODUCT,
-          relations,
-        )
-
-      return translatedProduct as Product
+    if (!ctx.localizationSettings.enabled) {
+      return this.getBaseProductBySlug(ctx, slug, relations)
     }
 
-    return product
+    if (ctx.isDefaultLanguage) {
+      return this.getBaseProductBySlug(ctx, slug, relations)
+    }
+
+    const entityId =
+      await this.translationPersistenceService.getEntityIdBySlugTranslation(
+        ctx,
+        EntityType.PRODUCT,
+        slug,
+        ctx.languageCode,
+      )
+
+    if (!entityId) {
+      throw new NotFoundException(`Product with slug ${slug} not found.`)
+    }
+
+    const product = await this.getById(ctx, entityId, { relations })
+    const translatedProduct =
+      await this.translationPersistenceService.mergeEntityWithTranslation<Product>(
+        ctx,
+        product,
+        EntityType.PRODUCT,
+        relations,
+      )
+
+    return translatedProduct as Product
   }
 
   async getMany(
@@ -565,5 +574,21 @@ export class ProductService {
       }
 
     return input
+  }
+
+  private async getBaseProductBySlug(
+    ctx: RequestContext,
+    slug: string,
+    relations?: Record<string, boolean | object>,
+  ) {
+    const product = await this.prisma.product.findFirst({
+      where: { slug, channelToken: ctx.channel.token },
+      include: relations ?? undefined,
+    })
+
+    if (!product)
+      throw new NotFoundException(`Product with slug ${slug} not found.`)
+
+    return product
   }
 }

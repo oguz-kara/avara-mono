@@ -249,7 +249,7 @@ export function SeoMetadataForm({ isProduct = false }: SeoMetadataFormProps) {
                   {...field}
                   value={field.value || ''}
                   label="Dil ve Bölge"
-                  placeholder="Örnek: tr-TR"
+                  placeholder="Örnek: tr"
                   helperText="Sayfa içeriğinin dil ve bölge hedeflemesi"
                   fullWidth
                   sx={{ mt: 2 }}

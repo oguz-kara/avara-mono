@@ -160,7 +160,7 @@ export default function CreateUpdateChannelForm({
       <Box>
         <FormLabel sx={{ display: 'block' }}>Varsayılan Dil Kodu</FormLabel>
         <Typography variant="caption" color="textSecondary">
-          ISO dil kodu (örn: tr-TR, en-US)
+          ISO dil kodu (örn: tr, en)
         </Typography>
         <Controller
           name="defaultLanguageCode"
@@ -170,7 +170,7 @@ export default function CreateUpdateChannelForm({
               {...field}
               error={!!error}
               helperText={error?.message}
-              placeholder="tr-TR"
+              placeholder="tr"
               fullWidth
             />
           )}

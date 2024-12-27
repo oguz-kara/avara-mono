@@ -114,6 +114,7 @@ export class RequestContextService {
   }
 
   private isLanguageAvailable(languageCode: string): boolean {
+    console.log({ languageCode, availableLanguages: this.availableLanguages })
     return this.availableLanguages.includes(languageCode)
   }
 }

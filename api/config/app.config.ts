@@ -37,8 +37,8 @@ export const appConfig: ConfigFactory<ConfigObject> = (): ConfigObject => ({
       version: process.env.AI_TRANSLATE_VERSION || 'gpt-3.5-turbo',
     },
     language: {
-      default: 'tr-TR',
-      available: ['en-US', 'es-ES', 'tr-TR'],
+      default: 'tr',
+      available: ['en', 'es', 'tr'],
     },
     currency: {
       default: 'USD',

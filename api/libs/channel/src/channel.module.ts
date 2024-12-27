@@ -1,12 +1,10 @@
-import { Module } from '@nestjs/common'
-import { ChannelResolver } from './api/graphql/channel.resolver'
+import { Global, Module } from '@nestjs/common'
 import { ChannelService } from './application/channel.service'
-import { RequestContextModule } from '@av/common'
-import { PrismaModule } from '@av/database'
 
+@Global()
 @Module({
-  imports: [PrismaModule, RequestContextModule],
-  providers: [ChannelResolver, ChannelService],
+  imports: [],
+  providers: [ChannelService],
   exports: [ChannelService],
 })
 export class ChannelModule {}

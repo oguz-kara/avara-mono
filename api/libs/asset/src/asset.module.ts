@@ -11,10 +11,9 @@ import {
   ImageProcessor,
   StorageStrategyFactory,
   FilenameNormalizer,
-  AssetController,
   LocalStorageStrategy,
 } from '.'
-import { PaginationValidator, RequestContextModule } from '@av/common'
+import { PaginationValidator } from '@av/common'
 import { PrismaService } from '@av/database'
 import { LocalFileSystemService } from './infrastructure/services/local-file-system.service'
 import { PathService } from './infrastructure/services/path.service'
@@ -22,7 +21,6 @@ import { MinioStorageStrategy } from './infrastructure/services/minio-storage-st
 
 @Module({
   imports: [
-    RequestContextModule,
     MulterModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async () => ({
@@ -36,7 +34,6 @@ import { MinioStorageStrategy } from './infrastructure/services/minio-storage-st
     }),
   ],
   providers: [
-    AssetController,
     AssetService,
     FileTypeService,
     ImageProcessor,
@@ -49,7 +46,7 @@ import { MinioStorageStrategy } from './infrastructure/services/minio-storage-st
     LocalFileSystemService,
     PathService,
   ],
-  controllers: [AssetController],
-  exports: [AssetController],
+  controllers: [],
+  exports: [],
 })
 export class AssetModule {}
