@@ -2,8 +2,8 @@ import { Field, ObjectType, InputType, ID } from '@nestjs/graphql'
 import { FacetValue } from './facet-value.types'
 import {
   CreateSeoMetadataInput,
-  SeoMetadata,
   UpdateSeoMetadataInput,
+  SeoMetadataPartial,
 } from '@av/seo/api/types/seo-metadata.types'
 
 @ObjectType()
@@ -62,8 +62,8 @@ export class Product {
   @Field(() => [Asset], { nullable: true })
   documents?: Asset[]
 
-  @Field(() => SeoMetadata, { nullable: true })
-  seoMetadata?: SeoMetadata
+  @Field(() => SeoMetadataPartial, { nullable: true })
+  seoMetadata?: SeoMetadataPartial
 
   @Field()
   createdAt: Date

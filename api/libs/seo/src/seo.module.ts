@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
-import { SeoMetadataResolver } from './api/resolvers/seo-metadata.resolver'
-import { SeoMetadataService } from './application/seo-metadata.service'
+import { SeoMetadataService } from './application/services/seo-metadata.service'
 import { PrismaModule } from '@av/database'
+<<<<<<< HEAD
 import { PaginationValidator, RequestContextModule } from '@av/common'
 import { CommonModule } from '@av/common/common.module'
 import { SitemapService } from './application/sitemap.service'
@@ -17,13 +17,23 @@ import { LocalizeModule } from '@av/localize'
     EventEmitterModule.forRoot(),
     LocalizeModule,
   ],
+=======
+import { PaginationValidator } from '@av/common'
+import { SitemapService } from './application/services/sitemap.service'
+import { SegmentService } from './application/services/segment.service'
+import { LocalizeModule } from '@av/localize'
+import { HreflangUrlsService } from './application/lib'
+
+@Module({
+  imports: [PrismaModule, LocalizeModule],
+>>>>>>> integrate-keycloak
   providers: [
-    SeoMetadataResolver,
     SeoMetadataService,
     PaginationValidator,
     SitemapService,
-    SitemapResolver,
+    SegmentService,
+    HreflangUrlsService,
   ],
-  exports: [SeoMetadataService],
+  exports: [SeoMetadataService, SegmentService, HreflangUrlsService],
 })
 export class SeoModule {}

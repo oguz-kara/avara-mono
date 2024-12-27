@@ -35,7 +35,6 @@ export class LocalStorageStrategy implements AssetStorageStrategy {
     private readonly filenameNormalizer: FilenameNormalizer,
   ) {
     this.basePath = path.resolve(__dirname, '..', 'uploads', 'preview')
-    console.log({ basePath: this.basePath })
     this.localPath =
       this.configService.get<string>('asset.storage.localPath') || ''
     this.variationSizes = {

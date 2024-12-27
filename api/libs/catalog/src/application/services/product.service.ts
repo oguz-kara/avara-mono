@@ -1,8 +1,11 @@
 import {
   ConflictException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+<<<<<<< HEAD
 
 import { PrismaService, Product, Prisma, EntityType } from '@av/database'
 import {
@@ -21,10 +24,21 @@ import {
   UpdateSeoMetadataInput,
 } from '@av/seo'
 
+=======
+import { PrismaService, Product, Prisma } from '@av/database'
+import { EntityType } from '@av/localize'
+import {
+  EntityType as GraphQLEntityType,
+  TranslationPersistenceService,
+} from '@av/localize'
+import { EVENT_LIST, PaginatedItemsResponse, RequestContext } from '@av/common'
+import { PaginationValidator } from '@av/common/utils/pagination.validator'
+>>>>>>> integrate-keycloak
 import {
   CreateProductInput,
   UpdateProductInput,
 } from '../../api/graphql/types/product.types'
+<<<<<<< HEAD
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import {
   ProductCreatedEvent,
@@ -32,15 +46,27 @@ import {
   ProductDeletedMultipleEvent,
   ProductUpdatedEvent,
 } from '../events/product.events'
+=======
+import { TranslatableEntityEventEmitter } from '@av/localize'
+import { EventEmitter2 } from '@nestjs/event-emitter'
+import { SeoMetadata } from '@av/seo'
+>>>>>>> integrate-keycloak
 
 @Injectable()
 export class ProductService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
     private readonly paginationValidator: PaginationValidator,
+    @Inject(forwardRef(() => TranslatableEntityEventEmitter))
     private readonly translatableEntityEventEmitter: TranslatableEntityEventEmitter,
+<<<<<<< HEAD
     private readonly seoMetadataService: SeoMetadataService,
     private readonly eventEmitter: EventEmitter2,
+=======
+    @Inject(forwardRef(() => TranslationPersistenceService))
+    private readonly translationPersistenceService: TranslationPersistenceService,
+>>>>>>> integrate-keycloak
   ) {}
 
   async create(
@@ -53,7 +79,10 @@ export class ProductService {
     if (data?.facetValueIds?.length > 0)
       await this.verifyFacetValuesExist(data.facetValueIds)
 
-    const createdProduct = await this.prisma.product.create({ data: input })
+    const createdProduct = await this.prisma.product.create({
+      data: input,
+      include: { seoMetadata: true, featuredAsset: true },
+    })
 
     if (createdProduct) {
       await this.handleSeoMetadataCreate(ctx, seoMetadata)
@@ -66,15 +95,30 @@ export class ProductService {
   async getById(
     ctx: RequestContext,
     id: string,
-    relations: Record<string, boolean | object>,
+    options?: {
+      translated?: boolean
+      relations?: Record<string, boolean | object>
+    },
   ): Promise<Product> {
     const product = await this.prisma.product.findFirst({
       where: { id, channelToken: ctx.channel.token },
-      include: relations ?? undefined,
+      include: options?.relations ?? undefined,
     })
 
     if (!product)
       throw new NotFoundException(`Product with ID ${id} not found.`)
+
+    if (ctx.localizationSettings.enabled && options?.translated) {
+      const translatedProduct =
+        await this.translationPersistenceService.mergeEntityWithTranslation<Product>(
+          ctx,
+          product,
+          EntityType.PRODUCT,
+          options?.relations,
+        )
+
+      return translatedProduct as Product
+    }
 
     return product
   }
@@ -84,26 +128,47 @@ export class ProductService {
     slug: string,
     relations: Record<string, boolean | object>,
   ): Promise<Product> {
-    const product = await this.prisma.product.findFirst({
-      where: { slug, channelToken: ctx.channel.token },
-      include: relations ?? undefined,
-    })
+    if (!ctx.localizationSettings.enabled) {
+      return this.getBaseProductBySlug(ctx, slug, relations)
+    }
 
-    if (!product)
+    if (ctx.isDefaultLanguage) {
+      return this.getBaseProductBySlug(ctx, slug, relations)
+    }
+
+    const entityId =
+      await this.translationPersistenceService.getEntityIdBySlugTranslation(
+        ctx,
+        EntityType.PRODUCT,
+        slug,
+        ctx.languageCode,
+      )
+
+    if (!entityId) {
       throw new NotFoundException(`Product with slug ${slug} not found.`)
+    }
 
-    return product
+    const product = await this.getById(ctx, entityId, { relations })
+    const translatedProduct =
+      await this.translationPersistenceService.mergeEntityWithTranslation<Product>(
+        ctx,
+        product,
+        EntityType.PRODUCT,
+        relations,
+      )
+
+    return translatedProduct as Product
   }
 
   async getMany(
     ctx: RequestContext,
-    relations: Record<string, boolean | object>,
     params?: {
       skip?: number
-      take?: number
+      take?: number | 'all'
       where?: Prisma.ProductWhereInput
       orderBy?: Prisma.ProductOrderByWithRelationInput
     },
+    relations?: Record<string, boolean | object>,
   ): Promise<PaginatedItemsResponse<Product>> {
     const { skip, take } =
       this.paginationValidator.validatePaginationParams(params)
@@ -119,6 +184,21 @@ export class ProductService {
         where: { ...params?.where, channelToken: ctx.channel.token },
       }),
     ])
+
+    if (ctx.localizationSettings.enabled) {
+      const translatedProduct =
+        await this.translationPersistenceService.mergeEntityListWithTranslation<Product>(
+          ctx,
+          items as any,
+          EntityType.PRODUCT,
+          relations,
+        )
+
+      return {
+        items: translatedProduct as any,
+        pagination: { skip, take, total },
+      }
+    }
 
     return {
       items,
@@ -176,13 +256,18 @@ export class ProductService {
       include: { seoMetadata: true },
     })
 
+<<<<<<< HEAD
     if (deletedProduct) {
+=======
+    if (ctx.localizationSettings.enabled && deletedProduct) {
+>>>>>>> integrate-keycloak
       this.translatableEntityEventEmitter.emitDeletedEvent(
         deletedProduct.id,
         EntityType.PRODUCT as GraphQLEntityType,
         ctx,
       )
 
+<<<<<<< HEAD
       if (deletedProduct.seoMetadata)
         this.translatableEntityEventEmitter.emitDeletedEvent(
           deletedProduct.seoMetadata?.id,
@@ -194,6 +279,14 @@ export class ProductService {
         EVENT_LIST.PRODUCT_DELETED,
         new ProductDeletedEvent(ctx, deletedProduct),
       )
+=======
+      if (deletedProduct.seoMetadata?.id)
+        this.translatableEntityEventEmitter.emitDeletedEvent(
+          deletedProduct.seoMetadata.id,
+          EntityType.SEO_METADATA,
+          ctx,
+        )
+>>>>>>> integrate-keycloak
     }
 
     return deletedProduct
@@ -205,13 +298,23 @@ export class ProductService {
     relations?: Record<string, boolean | object>,
   ): Promise<Prisma.BatchPayload> {
     const products = await this.prisma.product.findMany({
+<<<<<<< HEAD
       where: { id: { in: ids }, channelToken: ctx.channel.token },
       include: { seoMetadata: true, ...relations },
+=======
+      where: { id: { in: ids } },
+      include: { ...relations, seoMetadata: true },
+>>>>>>> integrate-keycloak
     })
+
+    const seoMetadataIds = products
+      .map((p) => p.seoMetadata?.id)
+      .filter(Boolean)
 
     if (products.length !== ids.length)
       throw new NotFoundException(`Products not found: ${ids.join(', ')}`)
 
+<<<<<<< HEAD
     const deletedProducts = await this.prisma.product.deleteMany({
       where: { id: { in: ids }, channelToken: ctx.channel.token },
     })
@@ -235,6 +338,27 @@ export class ProductService {
     )
 
     return deletedProducts
+=======
+    const count = await this.prisma.product.deleteMany({
+      where: { id: { in: ids }, channelToken: ctx.channel.token },
+    })
+
+    this.translatableEntityEventEmitter.emitDeletedMultipleEvent(
+      ids,
+      EntityType.PRODUCT,
+      ctx,
+    )
+
+    if (seoMetadataIds.length > 0) {
+      this.translatableEntityEventEmitter.emitDeletedMultipleEvent(
+        seoMetadataIds,
+        EntityType.SEO_METADATA,
+        ctx,
+      )
+    }
+
+    return count
+>>>>>>> integrate-keycloak
   }
 
   async markAsDeleted(
@@ -286,6 +410,21 @@ export class ProductService {
       }),
       this.prisma.product.count({ where: searchConditions }),
     ])
+
+    if (ctx.localizationSettings.enabled) {
+      const translatedProduct =
+        await this.translationPersistenceService.mergeEntityListWithTranslation<Product>(
+          ctx,
+          items,
+          EntityType.PRODUCT,
+          relations,
+        )
+
+      return {
+        items: translatedProduct as Product[],
+        pagination: { skip, take, total },
+      }
+    }
 
     return {
       items,
@@ -352,23 +491,63 @@ export class ProductService {
     }
   }
 
+<<<<<<< HEAD
   private emitProductCreatedEvents(product: Product, ctx: RequestContext) {
     this.eventEmitter.emit(
       EVENT_LIST.PRODUCT_CREATED,
       new ProductCreatedEvent(ctx, product),
     )
 
+=======
+  private async emitSeoMetadataCreatedEvent(
+    seoMetadata: SeoMetadata,
+    ctx: RequestContext,
+  ) {
+    const translatableSeoMetadataFields = {
+      name: seoMetadata?.name,
+      path: seoMetadata?.path,
+      title: seoMetadata?.title,
+      description: seoMetadata?.description,
+      keywords: seoMetadata?.keywords,
+      ogTitle: seoMetadata?.ogTitle,
+      ogDescription: seoMetadata?.ogDescription,
+      canonicalUrl: seoMetadata?.canonicalUrl,
+    }
+
+    if (seoMetadata && ctx.localizationSettings.enabled) {
+      this.translatableEntityEventEmitter.emitCreatedEvent(
+        seoMetadata.id,
+        EntityType.SEO_METADATA as GraphQLEntityType,
+        translatableSeoMetadataFields,
+        ctx,
+      )
+    }
+  }
+
+  private emitProductCreatedEvents(
+    product: Product & { seoMetadata: SeoMetadata | null },
+    ctx: RequestContext,
+  ) {
+>>>>>>> integrate-keycloak
     const translatableProductFields = {
       description: product.description,
       slug: product.slug,
     }
 
-    this.translatableEntityEventEmitter.emitCreatedEvent(
-      product.id,
-      EntityType.PRODUCT as GraphQLEntityType,
-      translatableProductFields,
+    this.eventEmitter.emit(EVENT_LIST.PRODUCT_CREATED, {
+      product,
+      seoMetadata: product.seoMetadata || null,
       ctx,
-    )
+    })
+
+    if (ctx.localizationSettings.enabled) {
+      this.translatableEntityEventEmitter.emitCreatedEvent(
+        product.id,
+        EntityType.PRODUCT as GraphQLEntityType,
+        translatableProductFields,
+        ctx,
+      )
+    }
   }
 
   private emitProductUpdatedTranslationEvent(
@@ -388,6 +567,32 @@ export class ProductService {
     )
   }
 
+<<<<<<< HEAD
+=======
+  private emitSeoMetadataUpdatedEvent(
+    seoMetadata: SeoMetadata,
+    ctx: RequestContext,
+  ) {
+    const translatableSeoMetadataFields = {
+      name: seoMetadata?.name || undefined,
+      path: seoMetadata?.path || undefined,
+      title: seoMetadata?.title || undefined,
+      description: seoMetadata?.description || undefined,
+      keywords: seoMetadata?.keywords || undefined,
+      ogTitle: seoMetadata?.ogTitle || undefined,
+      ogDescription: seoMetadata?.ogDescription || undefined,
+      canonicalUrl: seoMetadata?.canonicalUrl || undefined,
+    }
+
+    this.translatableEntityEventEmitter.emitUpdatedEvent(
+      seoMetadata.id,
+      EntityType.SEO_METADATA as GraphQLEntityType,
+      translatableSeoMetadataFields,
+      ctx,
+    )
+  }
+
+>>>>>>> integrate-keycloak
   private buildCreateProductInput(
     product: Omit<CreateProductInput, 'seoMetadata'>,
     ctx: RequestContext,
@@ -447,6 +652,7 @@ export class ProductService {
     return input
   }
 
+<<<<<<< HEAD
   private async handleSeoMetadataCreate(
     ctx: RequestContext,
     seoMetadata: CreateSeoMetadataInput,
@@ -507,5 +713,21 @@ export class ProductService {
     )
 
     return updatedSeoMetadata
+=======
+  private async getBaseProductBySlug(
+    ctx: RequestContext,
+    slug: string,
+    relations?: Record<string, boolean | object>,
+  ) {
+    const product = await this.prisma.product.findFirst({
+      where: { slug, channelToken: ctx.channel.token },
+      include: relations ?? undefined,
+    })
+
+    if (!product)
+      throw new NotFoundException(`Product with slug ${slug} not found.`)
+
+    return product
+>>>>>>> integrate-keycloak
   }
 }

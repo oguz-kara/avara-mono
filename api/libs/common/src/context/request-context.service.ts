@@ -3,11 +3,19 @@ import { Injectable } from '@nestjs/common'
 import { AsyncLocalStorage } from 'async_hooks'
 import { RequestContext } from './request-context'
 import { ChannelData } from './channel-context.interface'
-import { ChannelTokenNotFoundError } from './errors/channel-token-not-found-error'
+import { LocalizationSettings } from '@av/database'
+import { ConfigService } from '@nestjs/config'
 
 @Injectable()
 export class RequestContextService {
+  private readonly availableLanguages: string[]
   private static asyncLocalStorage = new AsyncLocalStorage<RequestContext>()
+
+  constructor(private readonly configService: ConfigService) {
+    this.availableLanguages = configService.get(
+      'localization.language.available',
+    )
+  }
 
   setContext(context: RequestContext): void {
     RequestContextService.asyncLocalStorage.enterWith(context)
@@ -22,20 +30,29 @@ export class RequestContextService {
 
   async createContext(
     channel: ChannelData,
+    localizationSettings: LocalizationSettings | undefined,
     headers: Record<string, string | string[]>,
   ): Promise<RequestContext> {
     try {
-      if (!channel) throw new ChannelTokenNotFoundError()
+      const acceptLanguage = this.extractHeader(headers, 'accept-language')
+      const isAvailableLanguage = this.isLanguageAvailable(acceptLanguage)
+      const languageCode = isAvailableLanguage
+        ? acceptLanguage
+        : channel.defaultLanguageCode
 
+      const currencyCode =
+        this.extractHeader(headers, 'x-currency-code') || channel.currencyCode
       const requestId =
         this.extractHeader(headers, 'x-request-id') || crypto.randomUUID()
 
       const clientInfo = this.extractClientInfo(headers)
 
       return new RequestContext({
-        channel,
-        languageCode: channel.defaultLanguageCode,
-        currencyCode: channel.currencyCode,
+        channel: channel,
+        localizationSettings: localizationSettings || undefined,
+        isDefaultLanguage: languageCode === channel.defaultLanguageCode,
+        languageCode,
+        currencyCode,
         requestId,
         clientInfo,
         timestamp: new Date(),
@@ -94,6 +111,11 @@ export class RequestContextService {
     }
 
     return new Error(`Failed to create request context: ${error.message}`)
+  }
+
+  private isLanguageAvailable(languageCode: string): boolean {
+    console.log({ languageCode, availableLanguages: this.availableLanguages })
+    return this.availableLanguages.includes(languageCode)
   }
 }
 

@@ -79,7 +79,6 @@ const columns: GridColDef[] = [
 
 export default function ProductListing() {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const router = useRouter()
   const {
     products,
     paginationModel,

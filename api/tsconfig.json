@@ -83,6 +83,12 @@
       ],
       "@av/localize/*": [
         "libs/localize/src/*"
+      ],
+      "@av/keycloak": [
+        "libs/keycloak/src"
+      ],
+      "@av/keycloak/*": [
+        "libs/keycloak/src/*"
       ]
     }
   }

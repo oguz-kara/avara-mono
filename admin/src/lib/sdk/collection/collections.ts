@@ -28,6 +28,7 @@ export class CollectionSDK {
       query: GET_COLLECTION,
       variables: { id },
     })
+    console.log({ responseCollection: response.data })
     return response.data.collection
   }
 }

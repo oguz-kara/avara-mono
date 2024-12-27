@@ -103,6 +103,7 @@ export default function UpdateCollectionForm({
 }: {
   collection: Collection
 }) {
+  console.log({ collection })
   const router = useRouter()
   const { snackbar } = useSnackbar()
   const [productTerm, setProductTerm] = useState('')

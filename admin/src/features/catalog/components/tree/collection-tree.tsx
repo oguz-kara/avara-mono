@@ -170,7 +170,6 @@ const CollectionTree: React.FC<{
   }
 
   useEffect(() => {
-    console.log({ data })
     if (data) {
       const tree = buildTree(data.collections.items as Collection[])
       setTreeData(tree as ExtendedCollection[])

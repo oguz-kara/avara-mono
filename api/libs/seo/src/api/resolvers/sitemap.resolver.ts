@@ -8,7 +8,7 @@ import {
   RequestContextInterceptor,
 } from '@av/common'
 
-import { SitemapService } from '@av/seo/application/sitemap.service'
+import { SitemapService } from '@av/seo/application/services/sitemap.service'
 import { Sitemap } from '../types/sitemap.types'
 
 @Resolver(() => Sitemap)

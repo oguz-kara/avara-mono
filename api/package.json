@@ -25,6 +25,8 @@
     "@apollo/server": "^4.11.2",
     "@aws-sdk/client-s3": "^3.701.0",
     "@aws-sdk/lib-storage": "^3.701.0",
+    "@google-cloud/translate": "^8.5.0",
+    "@keycloak/keycloak-admin-client": "^26.0.7",
     "@nestjs/apollo": "^12.2.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.3.0",
@@ -44,8 +46,11 @@
     "graphql": "^16.9.0",
     "graphql-fields": "^2.0.3",
     "graphql-type-json": "^0.3.2",
+    "keycloak-connect": "^26.0.7",
+    "lodash": "^4.17.21",
     "mime-types": "^2.1.35",
     "multer": "1.4.5-lts.1",
+    "nest-keycloak-connect": "^1.10.1",
     "openai": "^4.77.0",
     "optional": "^0.1.4",
     "passport-jwt": "^4.0.1",
@@ -113,7 +118,8 @@
       "^@av/user(|/.*)$": "<rootDir>/libs/user/src/$1",
       "^@av/seo(|/.*)$": "<rootDir>/libs/seo/src/$1",
       "^@av/ai(|/.*)$": "<rootDir>/libs/ai/src/$1",
-      "^@av/localize(|/.*)$": "<rootDir>/libs/localize/src/$1"
+      "^@av/localize(|/.*)$": "<rootDir>/libs/localize/src/$1",
+      "^@keycloak/keycloak(|/.*)$": "<rootDir>/libs/keycloak/src/$1"
     }
   }
 }

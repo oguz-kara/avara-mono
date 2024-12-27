@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
@@ -9,14 +10,16 @@ import { UserModule } from '@av/user'
 import { SeoModule } from '@av/seo'
 import { CommonModule } from '@av/common/common.module'
 import { AppGuard } from '@av/common/guards/app.guard'
+=======
+import { MiddlewareConsumer, Module } from '@nestjs/common'
+import { ChannelGuard } from '@av/common'
+>>>>>>> integrate-keycloak
 import { APP_GUARD } from '@nestjs/core'
-import { JwtModule } from '@nestjs/jwt'
-import { ConfigService } from '@nestjs/config'
-import { ConfigModule } from '@nestjs/config'
-import { EventEmitterModule } from '@nestjs/event-emitter'
-import { LocalizeModule } from '@av/localize'
+import { AccessTokenMiddleware } from '@av/keycloak/middleware/access-token.middleware'
+import { PublicModule } from './public.module'
 
 @Module({
+<<<<<<< HEAD
   imports: [
     EventEmitterModule.forRoot(),
     JwtModule.registerAsync({
@@ -65,11 +68,18 @@ import { LocalizeModule } from '@av/localize'
     //   ],
     // }),
   ],
+=======
+  imports: [PublicModule],
+>>>>>>> integrate-keycloak
   providers: [
     {
       provide: APP_GUARD,
-      useClass: AppGuard,
+      useClass: ChannelGuard,
     },
   ],
 })
-export class GatewayModule {}
+export class GatewayModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AccessTokenMiddleware).forRoutes('*')
+  }
+}

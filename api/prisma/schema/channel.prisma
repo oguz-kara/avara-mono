@@ -12,6 +12,7 @@ enum ChannelStatus {
     MAINTENANCE
 }
 
+<<<<<<< HEAD
 enum AutoTranslateModel {
     GPT_3_5_TURBO
     GPT_4
@@ -21,6 +22,8 @@ enum AutoTranslateModel {
     GPT_O1_MINI
 }
 
+=======
+>>>>>>> integrate-keycloak
 model Channel {
     id                  Int           @id @default(autoincrement())
     name                String
@@ -32,17 +35,17 @@ model Channel {
     status              ChannelStatus @default(ACTIVE)
     type                ChannelType   @default(OTHER)
 
-    deletedAt       DateTime?
-    deletedBy       String?
-    createdBy       String
-    updatedBy       String?
-    createdAt       DateTime         @default(now())
-    updatedAt       DateTime         @updatedAt
-    channelSettings ChannelSettings?
+    deletedAt DateTime?
+    deletedBy String?
+    createdBy String
+    updatedBy String?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
 
     @@index([token])
     @@index([code])
 }
+<<<<<<< HEAD
 
 model ChannelSettings {
     id        Int @id @default(autoincrement())
@@ -59,3 +62,5 @@ model ChannelSettings {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
+=======
+>>>>>>> integrate-keycloak

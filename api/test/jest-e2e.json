@@ -32,6 +32,8 @@
     "ai/ai/(.*)": "<rootDir>/../libs/ai/src/$1",
     "ai/ai": "<rootDir>/../libs/ai/src",
     "@av/localize/(.*)": "<rootDir>/../libs/localize/src/$1",
-    "@av/localize": "<rootDir>/../libs/localize/src"
+    "@av/localize": "<rootDir>/../libs/localize/src",
+    "@keycloak/keycloak/(.*)": "<rootDir>/../libs/keycloak/src/$1",
+    "@keycloak/keycloak": "<rootDir>/../libs/keycloak/src"
   }
 }

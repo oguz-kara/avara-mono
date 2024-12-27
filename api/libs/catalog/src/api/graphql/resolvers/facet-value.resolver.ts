@@ -36,14 +36,20 @@ export class FacetValueResolver {
   @Query(() => FindFacetValuesResponse)
   async facetValues(
     @Ctx() ctx: RequestContext,
+    @WithRelations() relations: Record<string, boolean | object>,
     @Args('facetId', { type: () => ID }) facetId: string,
     @Args('skip', { type: () => Number, nullable: true }) skip?: number,
     @Args('take', { type: () => Number, nullable: true }) take?: number,
   ): Promise<PaginatedItemsResponse<FacetValue>> {
-    return this.facetValueService.getMany(ctx, facetId, {
-      skip,
-      take,
-    })
+    return this.facetValueService.getManyByFacetId(
+      ctx,
+      facetId,
+      {
+        skip,
+        take,
+      },
+      relations,
+    )
   }
 
   @Mutation(() => Number)

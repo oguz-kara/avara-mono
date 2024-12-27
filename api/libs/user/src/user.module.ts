@@ -14,12 +14,11 @@ import {
 } from '.'
 import { JwtModule } from '@nestjs/jwt'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { PaginationValidator, RequestContextModule } from '@av/common'
+import { PaginationValidator } from '@av/common'
 import { PrismaService } from '@av/database'
 
 @Module({
   imports: [
-    RequestContextModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

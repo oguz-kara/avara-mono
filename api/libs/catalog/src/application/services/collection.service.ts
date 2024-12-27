@@ -1,32 +1,48 @@
-import { Injectable } from '@nestjs/common'
-
-import { PrismaService, Collection, Prisma, Product } from '@av/database'
+import {
+  Inject,
+  forwardRef,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
+import {
+  EntityType,
+  EntityType as GqlEntityType,
+  TranslationPersistenceService,
+} from '@av/localize'
 import {
   ExceedingMaxLimitError,
   PaginatedItemsResponse,
   PaginationParams,
   RequestContext,
 } from '@av/common'
+import { TranslatableEntityEventEmitter } from '@av/localize'
+
 import { PaginationValidator } from '@av/common/utils/pagination.validator'
 import {
   CreateCollectionInput,
   UpdateCollectionInput,
 } from '../../api/graphql/inputs/collection.dto'
 import { RuleType } from '../../api/graphql/enums/rule.enum'
+import { Collection, Prisma, Product, SeoMetadata } from '@av/database'
+import { PrismaService } from '@av/database'
+import { isEmpty } from 'lodash'
 
 @Injectable()
 export class CollectionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paginationValidator: PaginationValidator,
+    @Inject(forwardRef(() => TranslationPersistenceService))
+    private readonly translationPersistenceService: TranslationPersistenceService,
+    @Inject(forwardRef(() => TranslatableEntityEventEmitter))
+    private readonly translatableEntityEventEmitter: TranslatableEntityEventEmitter,
   ) {}
 
   async create(
     ctx: RequestContext,
     data: CreateCollectionInput,
   ): Promise<Collection> {
-    const { featuredAssetId, documentIds, seoMetadata, productIds, ...rest } =
-      data
+    const { featuredAssetId, documentIds, seoMetadata, ...rest } = data
     const inputData: Prisma.CollectionCreateInput = {
       ...rest,
       channelToken: ctx.channel.token,
@@ -35,9 +51,6 @@ export class CollectionService {
           return data.rules
         },
       },
-    }
-
-    if (productIds) {
     }
 
     if (featuredAssetId)
@@ -59,9 +72,21 @@ export class CollectionService {
         },
       }
 
-    return await this.prisma.collection.create({
+    const createdCollection = await this.prisma.collection.create({
       data: inputData,
+      include: {
+        seoMetadata: true,
+      },
     })
+
+    if (ctx.localizationSettings.enabled) {
+      this.emitCollectionCreatedEvents(createdCollection, ctx)
+
+      if (createdCollection.seoMetadata)
+        this.emitSeoMetadataCreatedEvent(createdCollection.seoMetadata, ctx)
+    }
+
+    return createdCollection
   }
 
   async getById(
@@ -74,6 +99,14 @@ export class CollectionService {
       include: relations || undefined,
     })
 
+    if (ctx.localizationSettings.enabled)
+      return (await this.translationPersistenceService.mergeEntityWithTranslation<Collection>(
+        ctx,
+        collection,
+        EntityType.COLLECTION,
+        relations,
+      )) as Collection
+
     return collection
   }
 
@@ -81,11 +114,12 @@ export class CollectionService {
     ctx: RequestContext,
     params?: {
       skip?: number
-      take?: number
+      take?: number | 'all'
       cursor?: Prisma.CollectionWhereUniqueInput
       where?: Prisma.CollectionWhereInput
       orderBy?: Prisma.CollectionOrderByWithRelationInput
     },
+    relations?: Record<string, boolean | object>,
   ): Promise<PaginatedItemsResponse<Collection>> {
     const { cursor, where, orderBy } = params || {}
 
@@ -100,19 +134,44 @@ export class CollectionService {
 
     const { skip, take } = validatedPaginatedParams as PaginationParams
 
-    const items = await this.prisma.collection.findMany({
-      skip: skip ?? 0,
-      take: take ?? 10,
-      cursor,
-      where: { ...where, channelToken: ctx.channel.token },
-      orderBy,
-    })
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.collection.findMany({
+        skip: skip ?? 0,
+        take: take ?? 10,
+        cursor,
+        where: { ...where, channelToken: ctx.channel.token },
+        orderBy,
+      }),
+      this.prisma.collection.count({
+        where: { ...where, channelToken: ctx.channel.token },
+      }),
+    ])
+
+    if (ctx.localizationSettings.enabled) {
+      const translatedItems =
+        await this.translationPersistenceService.mergeEntityListWithTranslation<Collection>(
+          ctx,
+          items,
+          EntityType.COLLECTION,
+          relations,
+        )
+
+      return {
+        items: translatedItems as Collection[],
+        pagination: {
+          skip,
+          take,
+          total,
+        },
+      }
+    }
 
     return {
       items,
       pagination: {
         skip,
         take,
+        total,
       },
     }
   }
@@ -123,8 +182,7 @@ export class CollectionService {
     data: UpdateCollectionInput,
     relations?: Record<string, boolean | object>,
   ): Promise<Collection> {
-    const { featuredAssetId, documentIds, seoMetadata, productIds, ...rest } =
-      data
+    const { featuredAssetId, documentIds, seoMetadata, ...rest } = data
     const inputData: Prisma.CollectionUpdateInput = {
       ...rest,
       channelToken: ctx.channel.token,
@@ -135,10 +193,10 @@ export class CollectionService {
       },
     }
 
-    await this.getById(ctx, id, relations)
+    const collection = await this.getById(ctx, id, relations)
 
-    if (productIds) {
-    }
+    if (!collection)
+      throw new NotFoundException('Collection not found to update!')
 
     if (featuredAssetId)
       inputData.featuredAsset = {
@@ -150,7 +208,7 @@ export class CollectionService {
         connect: documentIds.map((id) => ({ id })),
       }
 
-    if (seoMetadata)
+    if (seoMetadata && !isEmpty(seoMetadata))
       inputData.seoMetadata = {
         update: {
           ...seoMetadata,
@@ -158,10 +216,26 @@ export class CollectionService {
         },
       }
 
-    return this.prisma.collection.update({
+    const hasSeoMetadata = await this.prisma.seoMetadata.findFirst({
+      where: { collectionId: id, channelToken: ctx.channel.token },
+    })
+
+    const updatedCollection = await this.prisma.collection.update({
       where: { id },
       data: inputData,
     })
+
+    if (ctx.localizationSettings.enabled) {
+      this.emitCollectionUpdatedEvents(updatedCollection, ctx)
+
+      if (seoMetadata && !hasSeoMetadata) {
+        this.emitSeoMetadataCreatedEvent(seoMetadata as SeoMetadata, ctx)
+      } else if (seoMetadata && hasSeoMetadata) {
+        this.emitSeoMetadataUpdatedEvent(seoMetadata as SeoMetadata, ctx)
+      }
+    }
+
+    return updatedCollection
   }
 
   async editParent(
@@ -170,7 +244,14 @@ export class CollectionService {
     parentId: string,
     relations?: Record<string, boolean | object>,
   ): Promise<Collection> {
-    await this.getById(ctx, id, relations) // Ensure collection exists
+    const collection = await this.getById(ctx, id, relations)
+    const parentCollection = await this.getById(ctx, parentId, relations)
+
+    if (!collection)
+      throw new NotFoundException('Collection not found to update!')
+
+    if (!parentCollection)
+      throw new NotFoundException('Parent collection not found!')
 
     return this.prisma.collection.update({
       where: { id },
@@ -188,11 +269,32 @@ export class CollectionService {
     id: string,
     relations?: Record<string, boolean | object>,
   ): Promise<Collection> {
-    await this.getById(ctx, id, relations) // Ensure collection exists
+    const collection = await this.getById(ctx, id, relations)
 
-    return this.prisma.collection.delete({
+    if (!collection)
+      throw new NotFoundException('Collection not found to delete!')
+
+    const deletedCollection = await this.prisma.collection.delete({
       where: { id, channelToken: ctx.channel.token },
+      include: { seoMetadata: true },
     })
+
+    if (ctx.localizationSettings.enabled && deletedCollection) {
+      this.translatableEntityEventEmitter.emitDeletedEvent(
+        deletedCollection.id,
+        EntityType.COLLECTION,
+        ctx,
+      )
+
+      if (deletedCollection?.seoMetadata?.id)
+        this.translatableEntityEventEmitter.emitDeletedEvent(
+          deletedCollection.seoMetadata?.id,
+          EntityType.COLLECTION,
+          ctx,
+        )
+    }
+
+    return deletedCollection
   }
 
   async markAsDeleted(
@@ -219,28 +321,59 @@ export class CollectionService {
       take?: number
       where?: Prisma.CollectionWhereInput
     },
+    relations?: Record<string, boolean | object>,
   ): Promise<PaginatedItemsResponse<Collection>> {
     const { skip, take, where } = params || {}
 
-    const items = await this.prisma.collection.findMany({
-      where: {
-        ...where,
-        channelToken: ctx.channel.token,
-        OR: [
-          { name: { contains: query, mode: 'insensitive' } },
-          { description: { contains: query, mode: 'insensitive' } },
-          { slug: { contains: query, mode: 'insensitive' } },
-        ],
-      },
-      skip,
-      take,
-    })
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.collection.findMany({
+        where: {
+          ...where,
+          channelToken: ctx.channel.token,
+          OR: [
+            { name: { contains: query, mode: 'insensitive' } },
+            { description: { contains: query, mode: 'insensitive' } },
+            { slug: { contains: query, mode: 'insensitive' } },
+          ],
+        },
+        skip,
+        take,
+        include: relations || undefined,
+      }),
+      this.prisma.collection.count({
+        where: {
+          ...where,
+          channelToken: ctx.channel.token,
+          OR: [
+            { name: { contains: query, mode: 'insensitive' } },
+            { description: { contains: query, mode: 'insensitive' } },
+            { slug: { contains: query, mode: 'insensitive' } },
+          ],
+        },
+      }),
+    ])
+
+    if (ctx.localizationSettings.enabled) {
+      const translatedItems =
+        await this.translationPersistenceService.mergeEntityListWithTranslation<Collection>(
+          ctx,
+          items,
+          EntityType.COLLECTION,
+          relations,
+        )
+
+      return {
+        items: translatedItems as Collection[],
+        pagination: { skip, take, total },
+      }
+    }
 
     return {
       items,
       pagination: {
         skip,
         take,
+        total,
       },
     }
   }
@@ -258,6 +391,13 @@ export class CollectionService {
 
     const where = this.buildCombinedFilter(rules)
 
+    if (!where) {
+      return {
+        items: [],
+        pagination: { skip: 0, take: 0, total: 0 },
+      }
+    }
+
     const validatedPaginationParams =
       this.paginationValidator.validatePaginationParams({
         skip: params?.skip,
@@ -268,20 +408,131 @@ export class CollectionService {
 
     const { skip, take } = validatedPaginationParams as PaginationParams
 
-    const items = await this.prisma.product.findMany({
-      where: {
-        ...where,
-        channelToken: ctx.channel.token,
-      },
-      include: relations ?? undefined,
-      skip,
-      take,
-    })
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.product.findMany({
+        where: {
+          ...where,
+          channelToken: ctx.channel.token,
+        },
+        include: relations ?? undefined,
+        skip,
+        take,
+      }),
+      this.prisma.product.count({
+        where: {
+          ...where,
+          channelToken: ctx.channel.token,
+        },
+      }),
+    ])
+
+    if (ctx.localizationSettings.enabled) {
+      const translatedItems =
+        await this.translationPersistenceService.mergeEntityListWithTranslation<Product>(
+          ctx,
+          items,
+          EntityType.PRODUCT,
+          relations,
+        )
+
+      return {
+        items: translatedItems as Product[],
+        pagination: { skip, take, total },
+      }
+    }
 
     return {
       items,
-      pagination: { skip: skip ?? 0, take: take ?? 10 },
+      pagination: { skip, take, total },
     }
+  }
+
+  private emitCollectionCreatedEvents(
+    collection: Collection & {
+      seoMetadata: SeoMetadata
+    },
+    ctx: RequestContext,
+  ) {
+    const translatableCollectionFields = {
+      name: collection.name,
+      description: collection.description,
+      slug: collection.slug,
+    }
+
+    if (ctx.localizationSettings.enabled) {
+      this.translatableEntityEventEmitter.emitCreatedEvent(
+        collection.id,
+        EntityType.COLLECTION as GqlEntityType,
+        translatableCollectionFields,
+        ctx,
+      )
+    }
+  }
+
+  private async emitSeoMetadataCreatedEvent(
+    seoMetadata: SeoMetadata,
+    ctx: RequestContext,
+  ) {
+    const translatableSeoMetadataFields = {
+      name: seoMetadata?.name,
+      path: seoMetadata?.path,
+      title: seoMetadata?.title,
+      description: seoMetadata?.description,
+      keywords: seoMetadata?.keywords,
+      ogTitle: seoMetadata?.ogTitle,
+      ogDescription: seoMetadata?.ogDescription,
+      canonicalUrl: seoMetadata?.canonicalUrl,
+    }
+
+    if (seoMetadata && ctx.localizationSettings.enabled) {
+      this.translatableEntityEventEmitter.emitCreatedEvent(
+        seoMetadata.id,
+        EntityType.SEO_METADATA,
+        translatableSeoMetadataFields,
+        ctx,
+      )
+    }
+  }
+
+  private emitCollectionUpdatedEvents(
+    collection: Collection,
+    ctx: RequestContext,
+  ) {
+    const translatableCollectionFields = {
+      name: collection.name || undefined,
+      description: collection.description || undefined,
+      slug: collection.slug || undefined,
+    }
+
+    this.translatableEntityEventEmitter.emitUpdatedEvent(
+      collection.id,
+      EntityType.COLLECTION as GqlEntityType,
+      translatableCollectionFields,
+      ctx,
+    )
+  }
+
+  private emitSeoMetadataUpdatedEvent(
+    seoMetadata: SeoMetadata,
+    ctx: RequestContext,
+  ) {
+    const translatableSeoMetadataFields = {
+      name: seoMetadata?.name || undefined,
+      path: seoMetadata?.path || undefined,
+      title: seoMetadata?.title || undefined,
+      description: seoMetadata?.description || undefined,
+      keywords: seoMetadata?.keywords || undefined,
+      ogTitle: seoMetadata?.ogTitle || undefined,
+      ogDescription: seoMetadata?.ogDescription || undefined,
+      canonicalUrl: seoMetadata?.canonicalUrl || undefined,
+    }
+
+    this.translatableEntityEventEmitter.emitUpdatedEvent(
+      seoMetadata.id,
+      EntityType.SEO_METADATA,
+      translatableSeoMetadataFields,
+      ctx,
+    )
   }
 
   private async getDescendantCollectionIds(
@@ -319,7 +570,7 @@ export class CollectionService {
   }
 
   private buildCombinedFilter(rules: any[]): Prisma.ProductWhereInput {
-    return rules.reduce((acc, curr) => {
+    const r = rules.reduce((acc, curr) => {
       const parsedFilter = this.parseFilter(curr)
       if (parsedFilter.combineWithAnd) {
         Object.assign(acc, parsedFilter.condition)
@@ -329,6 +580,8 @@ export class CollectionService {
       }
       return acc
     }, {})
+
+    return Object.keys(r).length > 0 ? r : undefined
   }
 
   private parseFilter(filter: any): {

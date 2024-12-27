@@ -1,7 +1,7 @@
 'use client'
+import { z } from 'zod'
 import React from 'react'
 import { useForm, Controller, FormProvider } from 'react-hook-form'
-import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Button,
@@ -20,9 +20,8 @@ import { useSnackbar } from '@avc/context/snackbar-context'
 import { useRouter } from 'next/navigation'
 import { AUTHENTICATE_USER } from '@avc/graphql/mutations'
 import Link from 'next/link'
-import cookies from 'js-cookie'
 import RestorePlusLogo from '@avc/components/common/restoreplus-logo'
-import { useUser } from '../context/use-user'
+import { useSession } from '@avc/lib/auth/hooks/use-session'
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Must be a valid email'),
@@ -32,7 +31,7 @@ const loginSchema = z.object({
 type LoginFormInputs = z.infer<typeof loginSchema>
 
 export default function AuthenticateUserForm() {
-  const { fetchCurrentUser } = useUser()
+  const { user, signIn } = useSession()
   const router = useRouter()
   const { snackbar } = useSnackbar()
   const [loginMutation, { loading }] = useMutation(AUTHENTICATE_USER)
@@ -52,7 +51,14 @@ export default function AuthenticateUserForm() {
     formState: { errors },
   } = formMethods
 
-  // Handle form submission
+  const onsubmitTest = async (data: LoginFormInputs) => {
+    await signIn(
+      'local',
+      { username: data.email, password: data.password },
+      () => router.push('/katalog/urunler')
+    )
+  }
+
   const onSubmit = async (data: LoginFormInputs) => {
     try {
       const result = await loginMutation({
@@ -105,7 +111,7 @@ export default function AuthenticateUserForm() {
             <Box sx={{ display: 'flex', justifyContent: 'center', pb: 4 }}>
               <RestorePlusLogo />
             </Box>
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={handleSubmit(onsubmitTest)}>
               <Stack spacing={3}>
                 {/* Email Field */}
                 <Controller

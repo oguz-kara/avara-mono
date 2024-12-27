@@ -7,6 +7,7 @@ import {
   PaginationInput,
   RequestContext,
   RequestContextInterceptor,
+  WithRelations,
 } from '@av/common'
 
 import {
@@ -15,7 +16,7 @@ import {
   UpdateSeoMetadataInput,
   FindSeoMetadataResponse,
 } from '../types/seo-metadata.types'
-import { SeoMetadataService } from '../../application/seo-metadata.service'
+import { SeoMetadataService } from '../../application/services/seo-metadata.service'
 
 @Resolver(() => SeoMetadata)
 @UseInterceptors(RequestContextInterceptor)
@@ -26,8 +27,9 @@ export class SeoMetadataResolver {
   async seoMetadatas(
     @Ctx() ctx: RequestContext,
     @Args('pagination', { nullable: true }) pagination?: PaginationInput,
+    @WithRelations() relations?: Record<string, boolean | object>,
   ): Promise<PaginatedItemsResponse<SeoMetadata>> {
-    return this.seoService.getMany(ctx, pagination)
+    return this.seoService.getMany(ctx, pagination, relations)
   }
 
   @Query(() => SeoMetadata, { nullable: true })
